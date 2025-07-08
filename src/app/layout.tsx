@@ -3,9 +3,7 @@ import type {Metadata} from 'next';
 import { Toaster } from "@/components/ui/toaster"
 import { LanguageProvider } from '@/context/language-context';
 import { AuthProvider } from '@/context/auth-context';
-import AdminMessageManager from '@/components/admin-message-manager';
-import MaintenanceEnforcer from '@/components/maintenance-enforcer';
-import NotificationBanner from '@/components/notification-banner';
+import ClientLayoutComponents from '@/components/client-layout-components';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,9 +26,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <LanguageProvider>
           <AuthProvider>
-            <MaintenanceEnforcer />
-            <NotificationBanner />
-            <AdminMessageManager />
+            <ClientLayoutComponents />
             {children}
             <Toaster />
           </AuthProvider>

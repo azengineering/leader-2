@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/hero';
@@ -8,7 +9,8 @@ import HowItWorks from '@/components/how-it-works';
 import WhyItMatters from '@/components/why-it-matters';
 import FeaturedLeaders from '@/components/featured-leaders';
 import { getLeaders, type Leader } from '@/data/leaders';
-import LoadingScreen from '@/components/loading-screen';
+
+const LoadingScreen = dynamic(() => import('@/components/loading-screen'), { ssr: false });
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
