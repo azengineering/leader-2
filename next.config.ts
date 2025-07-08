@@ -1,6 +1,7 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone', // Add this line to enable standalone output
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,
@@ -26,7 +27,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   // Attempt to disable Next.js build cache entirely
-  cacheHandler: false,
+  // cacheHandler: false, // Comment out or remove this line
 };
 
 export default nextConfig;
