@@ -25,6 +25,8 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  // Attempt to disable Next.js build cache entirely
+  cacheHandler: false,
 };
 
 export default nextConfig;
