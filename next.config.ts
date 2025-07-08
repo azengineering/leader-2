@@ -1,5 +1,9 @@
 import type {NextConfig} from 'next';
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   output: 'standalone', // Add this line to enable standalone output
   /* config options here */
@@ -30,4 +34,4 @@ const nextConfig: NextConfig = {
   // cacheHandler: false, // Comment out or remove this line
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

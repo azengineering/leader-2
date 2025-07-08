@@ -5,12 +5,12 @@ import dynamic from 'next/dynamic';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/hero';
+import HowItWorks from '@/components/how-it-works';
+import WhyItMatters from '@/components/why-it-matters';
+import FeaturedLeaders from '@/components/featured-leaders';
 import { getLeaders, type Leader } from '@/data/leaders';
 
 const LoadingScreen = dynamic(() => import('@/components/loading-screen'), { ssr: false });
-const HowItWorks = dynamic(() => import('@/components/how-it-works'), { ssr: false });
-const WhyItMatters = dynamic(() => import('@/components/why-it-matters'), { ssr: false });
-const FeaturedLeaders = dynamic(() => import('@/components/featured-leaders'), { ssr: false });
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);

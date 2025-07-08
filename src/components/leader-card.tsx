@@ -25,7 +25,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth } from '@/context/auth-context';
 import RatingDialog from './rating-dialog';
 import ReviewsDialog from './reviews-dialog';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Separator } from './ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { cn } from '@/lib/utils';
@@ -34,9 +33,10 @@ import ManifestoDialog from './manifesto-dialog';
 import { TooltipProvider, Tooltip as TooltipComponent, TooltipTrigger as TooltipTriggerComponent, TooltipContent as TooltipContentComponent } from './ui/tooltip';
 import { Dialog, DialogContent as DialogPrimitiveContent, DialogHeader as DialogPrimitiveHeader, DialogTitle as DialogPrimitiveTitle, DialogDescription as DialogPrimitiveDescription } from '@/components/ui/dialog';
 import { getRatingDistribution, getSocialBehaviourDistribution } from '@/data/leaders';
-import { ChartConfig, ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartConfig, ChartContainer } from "@/components/ui/chart";
 import { Skeleton } from './ui/skeleton';
 import { ScrollArea } from './ui/scroll-area';
+import dynamic from 'next/dynamic';
 
 const RATING_COLORS: { [key: string]: string } = {
   "5": "#16a34a", // green-600
@@ -57,6 +57,8 @@ const SOCIAL_BEHAVIOUR_COLORS: { [key: string]: string } = {
   'Criminal': '#4f46e5', // indigo-600
 };
 
+const LeaderCharts = dynamic(() => import('./leader-charts'), { ssr: false });
+
 const StatCard = ({ title, value, icon: Icon }: { title: string, value: string | number, icon: React.ElementType }) => (
     <Card className="bg-secondary/50 p-4">
         <div className="flex items-center gap-4">
@@ -71,106 +73,107 @@ const StatCard = ({ title, value, icon: Icon }: { title: string, value: string |
     </Card>
 );
 
-const LeaderAnalyticsDialog = ({ leader, open, onOpenChange }: { leader: LeaderType, open: boolean, onOpenChange: (open: boolean) => void }) => {
-  const [ratingDistribution, setRatingDistribution] = useState<RatingDistribution[]>([]);
-  const [socialDistribution, setSocialDistribution] = useState<SocialBehaviourDistribution[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+const LeaderAnalyticsDialog = dynamic(() => Promise.resolve(
+  ({ leader, open, onOpenChange }: { leader: LeaderType, open: boolean, onOpenChange: (open: boolean) => void }) => {
+    const [ratingDistribution, setRatingDistribution] = useState<RatingDistribution[]>([]);
+    const [socialDistribution, setSocialBehaviourDistribution] = useState<SocialBehaviourDistribution[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (open) {
-      setIsLoading(true);
-      Promise.all([
-        getRatingDistribution(leader.id),
-        getSocialBehaviourDistribution(leader.id)
-      ]).then(([ratingData, socialData]) => {
-        setRatingDistribution(ratingData);
-        setSocialDistribution(socialData);
-        setIsLoading(false);
+    useEffect(() => {
+      if (open) {
+        setIsLoading(true);
+        Promise.all([
+          getRatingDistribution(leader.id),
+          getSocialBehaviourDistribution(leader.id)
+        ]).then(([ratingData, socialData]) => {
+          setRatingDistribution(ratingData);
+          setSocialBehaviourDistribution(socialData);
+          setIsLoading(false);
+        });
+      }
+    }, [open, leader.id]);
+
+    const ratingChartData = useMemo(() => {
+      const fullDistribution = [
+        { rating: 5, name: '5 Stars', value: 0 },
+        { rating: 4, name: '4 Stars', value: 0 },
+        { rating: 3, name: '3 Stars', value: 0 },
+        { rating: 2, name: '2 Stars', value: 0 },
+        { rating: 1, name: '1 Star', value: 0 },
+      ];
+      ratingDistribution.forEach(d => {
+        const item = fullDistribution.find(fd => fd.rating === d.rating);
+        if (item) item.value = d.count;
       });
-    }
-  }, [open, leader.id]);
+      return fullDistribution.filter(item => item.value > 0);
+    }, [ratingDistribution]);
 
-  const ratingChartData = useMemo(() => {
-    const fullDistribution = [
-      { rating: 5, name: '5 Stars', value: 0 },
-      { rating: 4, name: '4 Stars', value: 0 },
-      { rating: 3, name: '3 Stars', value: 0 },
-      { rating: 2, name: '2 Stars', value: 0 },
-      { rating: 1, name: '1 Star', value: 0 },
-    ];
-    ratingDistribution.forEach(d => {
-      const item = fullDistribution.find(fd => fd.rating === d.rating);
-      if (item) item.value = d.count;
-    });
-    return fullDistribution.filter(item => item.value > 0);
-  }, [ratingDistribution]);
+    const socialChartData = useMemo(() => socialDistribution.map(d => ({ ...d, value: d.count })), [socialDistribution]);
 
-  const socialChartData = useMemo(() => socialDistribution.map(d => ({ ...d, value: d.count })), [socialDistribution]);
+    const ratingChartConfig = ratingChartData.reduce((acc, item) => {
+      acc[item.name.replace(" ", "-")] = { label: item.name, color: RATING_COLORS[String(item.rating)] };
+      return acc;
+    }, {} as ChartConfig);
 
-  const ratingChartConfig = ratingChartData.reduce((acc, item) => {
-    acc[item.name.replace(" ", "-")] = { label: item.name, color: RATING_COLORS[String(item.rating)] };
-    return acc;
-  }, {} as ChartConfig);
+    const socialChartConfig = socialChartData.reduce((acc, item) => {
+      acc[item.name.replace(" ", "-")] = { label: item.name, color: SOCIAL_BEHAVIOUR_COLORS[item.name] || '#a8a29e' };
+      return acc;
+    }, {} as ChartConfig);
+    
+    const topTrait = socialDistribution.length > 0 ? socialDistribution[0].name : 'N/A';
 
-  const socialChartConfig = socialChartData.reduce((acc, item) => {
-    acc[item.name.replace(" ", "-")] = { label: item.name, color: SOCIAL_BEHAVIOUR_COLORS[item.name] || '#a8a29e' };
-    return acc;
-  }, {} as ChartConfig);
-  
-  const topTrait = socialDistribution.length > 0 ? socialDistribution[0].name : 'N/A';
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPrimitiveContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
-        <DialogPrimitiveHeader className="p-6 pb-0 flex-shrink-0">
-          <DialogPrimitiveTitle className="font-headline text-2xl">Performance Analytics: {leader.name}</DialogPrimitiveTitle>
-          <DialogPrimitiveDescription>A detailed analysis of user responses for this leader.</DialogPrimitiveDescription>
-        </DialogPrimitiveHeader>
-        <ScrollArea className="flex-grow">
-          <div className="p-6 space-y-6">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-96"><Skeleton className="h-full w-full" /></div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <StatCard title="Total Reviews" value={leader.reviewCount} icon={Users} />
-                    <StatCard title="Average Rating" value={leader.rating.toFixed(1)} icon={Star} />
-                    <StatCard title="Most Common Trait" value={topTrait} icon={HeartHandshake} />
-                </div>
-                <Separator />
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader><CardTitle className="text-center">Rating Distribution</CardTitle></CardHeader>
-                    <CardContent>
-                      {ratingChartData.length > 0 ? (
-                        <ChartContainer config={ratingChartConfig} className="mx-auto aspect-square h-[250px]">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Tooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                              <Pie data={ratingChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={2}>
-                                {ratingChartData.map((entry) => (<Cell key={entry.name} fill={RATING_COLORS[String(entry.rating)]} />))}
-                              </Pie>
-                              <Legend />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </ChartContainer>
-                      ) : <p className="text-muted-foreground text-center pt-16">No rating data available.</p>}
-                    </CardContent>
-                  </Card>
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogPrimitiveContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
+          <DialogPrimitiveHeader className="p-6 pb-0 flex-shrink-0">
+            <DialogPrimitiveTitle className="font-headline text-2xl">Performance Analytics: {leader.name}</DialogPrimitiveTitle>
+            <DialogPrimitiveDescription>A detailed analysis of user responses for this leader.</DialogPrimitiveDescription>
+          </DialogPrimitiveHeader>
+          <ScrollArea className="flex-grow">
+            <div className="p-6 space-y-6">
+              {isLoading ? (
+                <div className="flex justify-center items-center h-96"><Skeleton className="h-full w-full" /></div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <StatCard title="Total Reviews" value={leader.reviewCount} icon={Users} />
+                      <StatCard title="Average Rating" value={leader.rating.toFixed(1)} icon={Star} />
+                      <StatCard title="Most Common Trait" value={topTrait} icon={HeartHandshake} />
+                  </div>
+                  <Separator />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader><CardTitle className="text-center">Rating Distribution</CardTitle></CardHeader>
+                      <CardContent>
+                        {ratingChartData.length > 0 ? (
+                          <ChartContainer config={ratingChartConfig} className="mx-auto aspect-square h-[250px]">
+                            <LeaderCharts
+                              ratingChartData={ratingChartData}
+                              socialChartData={[]} // Not used here
+                              electionPerformanceData={null} // Not used here
+                              ratingChartConfig={ratingChartConfig}
+                              socialChartConfig={socialChartConfig} // Not used here
+                              RATING_COLORS={RATING_COLORS}
+                              SOCIAL_BEHAVIOUR_COLORS={SOCIAL_BEHAVIOUR_COLORS}
+                            />
+                          </ChartContainer>
+                        ) : <p className="text-muted-foreground text-center pt-16">No rating data available.</p>}
+                      </CardContent>
+                    </Card>
                    <Card>
                     <CardHeader><CardTitle className="text-center">Social Behaviour Analysis</CardTitle></CardHeader>
                     <CardContent>
                       {socialChartData.length > 0 ? (
                         <ChartContainer config={socialChartConfig} className="mx-auto aspect-square h-[250px]">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Tooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                              <Pie data={socialChartData} dataKey="value" nameKey="name" innerRadius={60} strokeWidth={2}>
-                                  {socialChartData.map((entry) => (<Cell key={entry.name} fill={SOCIAL_BEHAVIOUR_COLORS[entry.name] || '#a8a29e'} />))}
-                              </Pie>
-                              <Legend />
-                            </PieChart>
-                          </ResponsiveContainer>
+                          <LeaderCharts
+                            ratingChartData={[]} // Not used here
+                            socialChartData={socialChartData}
+                            electionPerformanceData={null} // Not used here
+                            ratingChartConfig={ratingChartConfig} // Not used here
+                            socialChartConfig={socialChartConfig}
+                            RATING_COLORS={RATING_COLORS}
+                            SOCIAL_BEHAVIOUR_COLORS={SOCIAL_BEHAVIOUR_COLORS}
+                          />
                         </ChartContainer>
                       ) : <p className="text-muted-foreground text-center pt-16">No social behaviour data available.</p>}
                     </CardContent>
@@ -183,7 +186,8 @@ const LeaderAnalyticsDialog = ({ leader, open, onOpenChange }: { leader: LeaderT
       </DialogPrimitiveContent>
     </Dialog>
   );
-};
+}
+), { ssr: false });
 
 
 interface LeaderCardProps {
@@ -475,32 +479,15 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
                                           </CardHeader>
                                           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                                               <div className="w-full h-52">
-                                                  <ResponsiveContainer width="100%" height="100%">
-                                                      <PieChart>
-                                                          <Pie
-                                                              data={electionPerformance.data}
-                                                              dataKey="value"
-                                                              nameKey="name"
-                                                              cx="50%"
-                                                              cy="50%"
-                                                              outerRadius={80}
-                                                              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                                                          >
-                                                              {electionPerformance.data.map((entry) => (
-                                                                  <Cell key={`cell-${entry.name}`} fill={entry.color} />
-                                                              ))}
-                                                          </Pie>
-                                                          <Tooltip
-                                                              cursor={{ fill: 'hsla(var(--muted))' }}
-                                                              contentStyle={{
-                                                                  background: 'hsl(var(--background))',
-                                                                  borderRadius: 'var(--radius)',
-                                                                  border: '1px solid hsl(var(--border))'
-                                                              }}
-                                                          />
-                                                          <Legend iconType="circle" />
-                                                      </PieChart>
-                                                  </ResponsiveContainer>
+                                                  <LeaderCharts
+                                                      ratingChartData={[]}
+                                                      socialChartData={[]}
+                                                      electionPerformanceData={electionPerformance.data}
+                                                      ratingChartConfig={{}} // Not used here
+                                                      socialChartConfig={{}} // Not used here
+                                                      RATING_COLORS={RATING_COLORS} // Not used here
+                                                      SOCIAL_BEHAVIOUR_COLORS={SOCIAL_BEHAVIOUR_COLORS} // Not used here
+                                                  />
                                               </div>
                                               <div className="space-y-4">
                                                   <p className="text-lg font-bold text-center md:text-left">Total Elections Fought: {electionPerformance.total}</p>
