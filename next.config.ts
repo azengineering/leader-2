@@ -18,6 +18,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Add this to disable webpack cache for server builds
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.cache = false;
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
