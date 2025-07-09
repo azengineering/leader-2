@@ -36,7 +36,7 @@ export default function LeaderList({ leaders }: LeaderListProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {leaders.map((leader) => (
-        <LeaderCard key={leader.id} leader={leader} />
+        <LeaderCard key={leader.id} leader={leader} id={`leader-${leader.id}`} />
       ))}
     </div>
   );

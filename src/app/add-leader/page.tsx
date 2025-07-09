@@ -96,6 +96,8 @@ const AddLeaderPageContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [matchingLeaders, setMatchingLeaders] = useState<Leader[]>([]);
   const [isMatchingLeadersLoading, setIsMatchingLeadersLoading] = useState(true);
+  const [hasFetchedMatchingLeaders, setHasFetchedMatchingLeaders] = useState(false); // New state
+  const [hasFetchedLeaderData, setHasFetchedLeaderData] = useState(false); // New state
   const [manifestoForView, setManifestoForView] = useState<{url: string; name: string} | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
@@ -129,7 +131,7 @@ const AddLeaderPageContent = () => {
 
   useEffect(() => {
     const fetchMatchingLeaders = async () => {
-      if (user) {
+      if (user && !hasFetchedMatchingLeaders && isAuthorized) { // Only fetch if user exists, not fetched, and authorized
         setIsMatchingLeadersLoading(true);
         const allLeaders = await getLeaders();
         const { mpConstituency, mlaConstituency, panchayat, state } = user;
@@ -161,14 +163,14 @@ const AddLeaderPageContent = () => {
         const uniqueLeaders = Array.from(new Set(locationBasedLeaders.map(l => l.id))).map(id => locationBasedLeaders.find(l => l.id === id)!);
         setMatchingLeaders(uniqueLeaders);
         setIsMatchingLeadersLoading(false);
-      } else {
+        setHasFetchedMatchingLeaders(true); // Mark as fetched
+      } else if (!user && isAuthorized && !hasFetchedMatchingLeaders) { // For non-logged in but authorized (e.g., admin)
         setIsMatchingLeadersLoading(false);
+        setHasFetchedMatchingLeaders(true);
       }
     };
-    if (isAuthorized) {
-        fetchMatchingLeaders();
-    }
-  }, [user, isAuthorized]);
+    fetchMatchingLeaders();
+  }, [user, isAuthorized, hasFetchedMatchingLeaders]); // Added hasFetchedMatchingLeaders to dependency array
 
   useEffect(() => {
     const editId = searchParams.get('edit');
@@ -176,49 +178,51 @@ const AddLeaderPageContent = () => {
       setIsEditMode(true);
       setLeaderId(editId);
       const fetchLeaderData = async () => {
-        try {
-          const isAdmin = localStorage.getItem('admin_auth') === 'true';
-          const leaderData = await getLeaderById(editId);
-          if (leaderData) {
-              if (!isAdmin && user && leaderData.addedByUserId !== user.id) {
-                  toast({ variant: 'destructive', title: 'Unauthorized', description: "You are not allowed to edit this leader." });
-                  router.push('/my-activities');
-                  return;
-              }
-            setCurrentLeader(leaderData);
-            form.reset({
-              name: leaderData.name,
-              partyName: leaderData.partyName,
-              electionType: leaderData.electionType,
-              constituency: leaderData.constituency,
-              gender: leaderData.gender,
-              age: leaderData.age,
-              nativeAddress: leaderData.nativeAddress,
-              state: leaderData.location.state || '',
-              district: leaderData.location.district || '',
-              previousElections: leaderData.previousElections || [],
-              twitterUrl: leaderData.twitterUrl || '',
-              photoUrl: undefined,
-              manifestoUrl: undefined,
-            });
-          } else {
-            toast({ variant: 'destructive', title: 'Error', description: 'Leader not found.' });
-            router.push('/rate-leader');
+        if (!hasFetchedLeaderData && isAuthorized) { // Only fetch if not fetched and authorized
+          try {
+            const isAdmin = localStorage.getItem('admin_auth') === 'true';
+            const leaderData = await getLeaderById(editId);
+            if (leaderData) {
+                if (!isAdmin && user && leaderData.addedByUserId !== user.id) {
+                    toast({ variant: 'destructive', title: 'Unauthorized', description: "You are not allowed to edit this leader." });
+                    router.push('/my-activities');
+                    return;
+                }
+              setCurrentLeader(leaderData);
+              form.reset({
+                name: leaderData.name,
+                partyName: leaderData.partyName,
+                electionType: leaderData.electionType,
+                constituency: leaderData.constituency,
+                gender: leaderData.gender,
+                age: leaderData.age,
+                nativeAddress: leaderData.nativeAddress,
+                state: leaderData.location.state || '',
+                district: leaderData.location.district || '',
+                previousElections: leaderData.previousElections || [],
+                twitterUrl: leaderData.twitterUrl || '',
+                photoUrl: undefined,
+                manifestoUrl: undefined,
+              });
+            } else {
+              toast({ variant: 'destructive', title: 'Error', description: 'Leader not found.' });
+              router.push('/rate-leader');
+            }
+          } catch (error) {
+              console.error(error);
+              toast({ variant: 'destructive', title: 'Error', description: 'Failed to load leader data.' });
+          } finally {
+              setIsLoading(false);
+              setHasFetchedLeaderData(true); // Mark as fetched
           }
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to load leader data.' });
-        } finally {
-            setIsLoading(false);
         }
       };
-      if (isAuthorized) {
-        fetchLeaderData();
-      }
+      fetchLeaderData();
     } else {
         setIsLoading(false);
+        setHasFetchedLeaderData(true); // Mark as fetched if not in edit mode
     }
-  }, [searchParams, form, router, toast, user, isAuthorized]);
+  }, [searchParams, form, router, toast, user, isAuthorized, hasFetchedLeaderData]); // Added hasFetchedLeaderData to dependency array
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,

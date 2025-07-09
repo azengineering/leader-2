@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { Leader as LeaderType, RatingDistribution, SocialBehaviourDistribution } from '@/data/leaders';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, Twitter, Eye, Edit, ChevronDown, FileText, Info, BarChart, Users, HeartHandshake } from 'lucide-react';
+import { Star, Twitter, Eye, Edit, ChevronDown, FileText, Info, BarChart, Users, HeartHandshake, Share2, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/context/language-context';
 import {
@@ -31,7 +31,9 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import ManifestoDialog from './manifesto-dialog';
 import { TooltipProvider, Tooltip as TooltipComponent, TooltipTrigger as TooltipTriggerComponent, TooltipContent as TooltipContentComponent } from './ui/tooltip';
-import { Dialog, DialogContent as DialogPrimitiveContent, DialogHeader as DialogPrimitiveHeader, DialogTitle as DialogPrimitiveTitle, DialogDescription as DialogPrimitiveDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent as DialogPrimitiveContent, DialogHeader as DialogPrimitiveHeader, DialogTitle as DialogPrimitiveTitle, DialogDescription as DialogPrimitiveDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from './ui/input';
+import { useToast } from '@/hooks/use-toast';
 import { getRatingDistribution, getSocialBehaviourDistribution } from '@/data/leaders';
 import { ChartConfig, ChartContainer } from "@/components/ui/chart";
 import { Skeleton } from './ui/skeleton';
@@ -189,15 +191,80 @@ const LeaderAnalyticsDialog = dynamic(() => Promise.resolve(
 }
 ), { ssr: false });
 
+const ShareDialog = ({ leader, open, onOpenChange }: { leader: LeaderType, open: boolean, onOpenChange: (open: boolean) => void }) => {
+  const { toast } = useToast();
+  const [shareUrl, setShareUrl] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setShareUrl(`${window.location.origin}/rate-leader?leader=${leader.id}`);
+    }
+  }, [leader.id]);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    toast({
+      title: "Copied to clipboard!",
+      description: "You can now share the link.",
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitiveContent className="sm:max-w-md">
+        <DialogPrimitiveHeader>
+          <DialogPrimitiveTitle>Share Leader Profile</DialogPrimitiveTitle>
+          <DialogPrimitiveDescription>
+            Share this leader's profile with others.
+          </DialogPrimitiveDescription>
+        </DialogPrimitiveHeader>
+        <div className="flex items-center space-x-2">
+          <div className="grid flex-1 gap-2">
+            <Input
+              id="link"
+              defaultValue={shareUrl}
+              readOnly
+            />
+          </div>
+          <Button type="submit" size="sm" className="px-3" onClick={copyToClipboard}>
+            <span className="sr-only">Copy</span>
+            <Copy className="h-4 w-4" />
+          </Button>
+        </div>
+        <DialogFooter className="sm:justify-start">
+            <div className="flex gap-2">
+                <Button asChild variant="outline">
+                    <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out this leader: ${shareUrl}`)}`} target="_blank" rel="noopener noreferrer">
+                        WhatsApp
+                    </a>
+                </Button>
+                <Button asChild variant="outline">
+                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`Check out this leader:`)}`} target="_blank" rel="noopener noreferrer">
+                        Twitter
+                    </a>
+                </Button>
+                <Button asChild variant="outline">
+                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer">
+                        Facebook
+                    </a>
+                </Button>
+            </div>
+        </DialogFooter>
+      </DialogPrimitiveContent>
+    </Dialog>
+  );
+};
+
 
 interface LeaderCardProps {
   leader: LeaderType;
   isEditable?: boolean;
   onEdit?: () => void;
   variant?: 'default' | 'compact';
+  id?: string;
 }
 
-export default function LeaderCard({ leader: initialLeader, isEditable = false, onEdit, variant = 'default' }: LeaderCardProps) {
+export default function LeaderCard({ leader: initialLeader, isEditable = false, onEdit, variant = 'default', id }: LeaderCardProps) {
   const { t } = useLanguage();
   const { user } = useAuth();
   const router = useRouter();
@@ -209,6 +276,7 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
   const [isLoginAlertOpen, setLoginAlertOpen] = useState(false);
   const [isManifestoDialogOpen, setManifestoDialogOpen] = useState(false);
   const [isAnalyticsOpen, setAnalyticsOpen] = useState(false);
+  const [isShareDialogOpen, setShareDialogOpen] = useState(false);
 
   const genderText = leader.gender.charAt(0).toUpperCase() + leader.gender.slice(1);
   const isCompact = variant === 'compact';
@@ -251,7 +319,7 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
 
   return (
     <>
-      <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg rounded-xl border">
+      <Card id={id} className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg rounded-xl border">
         <CardContent className={cn("p-4 flex-grow flex flex-col", isCompact && "p-3")}>
           <div className="flex gap-4 items-start mb-4">
               <Image
@@ -307,18 +375,24 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
                   <p className={cn("text-sm text-muted-foreground", isCompact && "text-xs")}>
                       {genderText}, {leader.age} yrs old
                   </p>
-                  <div className="flex items-center gap-1 text-blue-600 mt-1">
-                      <Star className="w-4 h-4 fill-current text-amber-500" />
-                      <span className={cn("font-bold text-primary text-sm", isCompact && "text-xs")}>{leader.rating.toFixed(1)}</span>
-                       <button
-                          onClick={() => !isCompact && leader.reviewCount > 0 && setReviewsDialogOpen(true)}
-                          className={cn("flex items-center gap-1 text-primary text-xs ml-1 hover:underline disabled:no-underline disabled:cursor-default", isCompact && "pointer-events-none")}
-                          disabled={leader.reviewCount === 0}
-                          aria-label={`View ${leader.reviewCount} reviews`}
-                        >
-                          <span>({leader.reviewCount} {t('leaderCard.reviews')})</span>
-                          {!isCompact && leader.reviewCount > 0 && <Eye className="h-3 w-3" />}
-                        </button>
+                  <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-1 text-blue-600 mt-1">
+                          <Star className="w-4 h-4 fill-current text-amber-500" />
+                          <span className={cn("font-bold text-primary text-sm", isCompact && "text-xs")}>{leader.rating.toFixed(1)}</span>
+                           <button
+                              onClick={() => !isCompact && leader.reviewCount > 0 && setReviewsDialogOpen(true)}
+                              className={cn("flex items-center gap-1 text-primary text-xs ml-1 hover:underline disabled:no-underline disabled:cursor-default", isCompact && "pointer-events-none")}
+                              disabled={leader.reviewCount === 0}
+                              aria-label={`View ${leader.reviewCount} reviews`}
+                            >
+                              <span>({leader.reviewCount} {t('leaderCard.reviews')})</span>
+                              {!isCompact && leader.reviewCount > 0 && <Eye className="h-3 w-3" />}
+                            </button>
+                      </div>
+                      <Button size="icon" onClick={() => setShareDialogOpen(true)}>
+                          <Share2 className="h-4 w-4" />
+                          <span className="sr-only">Share</span>
+                      </Button>
                   </div>
               </div>
           </div>
@@ -360,7 +434,7 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
                           aria-label="View Performance Analytics"
                       >
                           <svg
-                              className="h-14 w-14"
+                              className="h-16 w-16"
                               viewBox="0 0 24 24"
                               fill="none"
                               xmlns="http://www.w3.org/2000/svg"
@@ -389,7 +463,7 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
                       </Button>
                     </TooltipTriggerComponent>
                     <TooltipContentComponent>
-                      <p>View Performance Analytics</p>
+                      <p>{t('leaderCard.performanceAnalytics')}</p>
                     </TooltipContentComponent>
                   </TooltipComponent>
                 </TooltipProvider>
@@ -468,14 +542,14 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
                                 <Collapsible className="mt-4">
                                   <CollapsibleTrigger asChild>
                                       <Button variant="link" className="text-primary p-0 h-auto flex items-center gap-1 data-[state=open]:font-bold text-sm">
-                                          View Performance Analysis
+                                          {t('leaderCard.performanceAnalytics')}
                                           <ChevronDown className="h-4 w-4 transition-transform data-[state=open]:rotate-180" />
                                       </Button>
                                   </CollapsibleTrigger>
                                   <CollapsibleContent className="mt-4 animate-in fade-in-0 zoom-in-95">
                                       <Card className="bg-secondary/30">
                                           <CardHeader>
-                                              <CardTitle className="text-center text-xl font-headline">Performance Analysis</CardTitle>
+                                              <CardTitle className="text-center text-xl font-headline">{t('leaderCard.performanceAnalytics')}</CardTitle>
                                           </CardHeader>
                                           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                                               <div className="w-full h-52">
@@ -561,6 +635,12 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
         onOpenChange={setManifestoDialogOpen}
         manifestoUrl={leader.manifestoUrl ?? null}
         leaderName={leader.name}
+      />
+
+      <ShareDialog
+        leader={leader}
+        open={isShareDialogOpen}
+        onOpenChange={setShareDialogOpen}
       />
 
       {!isCompact && (

@@ -42,6 +42,7 @@ function RateLeaderContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const leadersPerPage = 10;
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false); // New state to track initial load
   
   const { user } = useAuth();
   const router = useRouter();
@@ -49,18 +50,28 @@ function RateLeaderContent() {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   useEffect(() => {
-    const candidateNameFromQuery = searchParams.get('candidateName');
+    const leaderIdFromQuery = searchParams.get('leader');
+    if (leaderIdFromQuery && !isLoading) {
+      const element = document.getElementById(`leader-${leaderIdFromQuery}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight the card
+        element.classList.add('shadow-2xl', 'shadow-primary/50', 'ring-2', 'ring-primary');
+        setTimeout(() => {
+            element.classList.remove('shadow-2xl', 'shadow-primary/50', 'ring-2', 'ring-primary');
+        }, 3000);
+      }
+    }
+  }, [searchParams, isLoading]);
 
-    const fetchAndFilterLeaders = async () => {
-      setIsLoading(true);
-      const leadersFromStorage = await getLeaders();
-      setAllLeaders(leadersFromStorage); // Keep the full list for searching
-      
-      let leadersToShow = leadersFromStorage;
+  useEffect(() => {
+    if (hasLoadedInitialData) { // Only run filtering if data has been loaded
+      const candidateNameFromQuery = searchParams.get('candidateName');
+      let leadersToShow = allLeaders;
 
       if (candidateNameFromQuery) {
         const lowerCaseQuery = candidateNameFromQuery.toLowerCase();
-        const specificLeaders = leadersFromStorage.filter(leader => 
+        const specificLeaders = allLeaders.filter(leader => 
           leader.name.toLowerCase() === lowerCaseQuery
         );
         if (specificLeaders.length > 0) {
@@ -74,7 +85,7 @@ function RateLeaderContent() {
         const lowerPanchayat = panchayat?.trim().toLowerCase();
         const userState = state?.trim();
 
-        const locationBasedLeaders = leadersFromStorage.filter(leader => {
+        const locationBasedLeaders = allLeaders.filter(leader => {
           const leaderConstituency = leader.constituency.trim().toLowerCase();
           const leaderState = leader.location.state?.trim();
 
@@ -104,10 +115,23 @@ function RateLeaderContent() {
       
       setFilteredLeaders(leadersToShow);
       setCurrentPage(1);
-      setIsLoading(false);
-    };
-    fetchAndFilterLeaders();
-  }, [user, searchParams]);
+    }
+  }, [user, searchParams, allLeaders, hasLoadedInitialData]); // Depend on allLeaders and hasLoadedInitialData
+
+  // New useEffect for initial data fetching
+  useEffect(() => {
+    if (!hasLoadedInitialData) {
+      const fetchInitialLeaders = async () => {
+        setIsLoading(true);
+        const leadersFromStorage = await getLeaders();
+        setAllLeaders(leadersFromStorage);
+        setFilteredLeaders(leadersFromStorage); // Initially show all leaders
+        setIsLoading(false);
+        setHasLoadedInitialData(true); // Mark data as loaded
+      };
+      fetchInitialLeaders();
+    }
+  }, [hasLoadedInitialData]); // Only run once on mount
 
   const handleAddLeaderClick = () => {
     if (user) {
@@ -121,7 +145,7 @@ function RateLeaderContent() {
     setIsLoading(true);
     const { electionType, searchTerm, candidateName } = filters;
 
-    // Use a temporary array for all leaders to ensure we have the latest data
+    // Always fetch fresh data on search
     const currentLeaders = await getLeaders();
     setAllLeaders(currentLeaders);
 
@@ -153,6 +177,7 @@ function RateLeaderContent() {
     setCurrentPage(1);
     setIsLoading(false);
   };
+
 
   const LeaderListSkeleton = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

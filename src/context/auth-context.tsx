@@ -29,36 +29,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setLoading(true);
+      async (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         if (session?.user) {
-          let userProfile = await findUserById(session.user.id);
-          
-          // If profile is missing, it could be a first-time Google sign-in
-          // or an old account. We'll create it.
-          if (!userProfile) {
-            const { error: rpcError } = await supabase.rpc('ensure_user_profile_exists');
-            if (rpcError) {
-              console.error("Auth state change: Error ensuring profile exists", rpcError);
+          // Only fetch user profile if it's not already loaded
+          // This prevents re-fetching on tab focus
+          if (!user) {
+            let userProfile = await findUserById(session.user.id);
+            
+            if (!userProfile) {
+              const { error: rpcError } = await supabase.rpc('ensure_user_profile_exists');
+              if (rpcError) {
+                console.error("Auth state change: Error ensuring profile exists", rpcError);
+                await supabase.auth.signOut();
+                setUser(null);
+                setLoading(false);
+                return;
+              }
+              userProfile = await findUserById(session.user.id);
+            }
+
+            if (userProfile && !userProfile.isBlocked) {
+              setUser(userProfile);
+            } else {
               await supabase.auth.signOut();
               setUser(null);
-              setLoading(false);
-              return;
             }
-            // Fetch the newly created profile
-            userProfile = await findUserById(session.user.id);
           }
-
-          // Blocked users are handled at login. If a session exists for a now-blocked user,
-          // this will log them out on the next interaction or page load.
-          if (userProfile && !userProfile.isBlocked) {
-            setUser(userProfile);
-          } else {
-            await supabase.auth.signOut();
-            setUser(null);
-          }
-        } else {
-          setUser(null);
         }
         setLoading(false);
       }

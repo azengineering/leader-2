@@ -30,7 +30,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useLanguage, type Language } from '@/context/language-context';
 import { useAuth } from '@/context/auth-context';
-import ProfileDialog from './profile-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export default function Header() {
@@ -38,7 +37,6 @@ export default function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
 
 
@@ -58,22 +56,21 @@ export default function Header() {
   };
 
   const LanguageSelector = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Globe className="h-[1.2rem] w-[1.2rem]" />
-          <span className="sr-only">{t('header.language')}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={() => setLanguage('en')}>
-          {t('header.english')}
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setLanguage('hi')}>
-          {t('header.hindi')}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => setLanguage('en')}
+        className={`text-sm font-medium ${language === 'en' ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground transition-colors`}
+      >
+        Eng
+      </button>
+      <span className="text-muted-foreground">|</span>
+      <button
+        onClick={() => setLanguage('hi')}
+        className={`text-sm font-medium ${language === 'hi' ? 'text-primary' : 'text-muted-foreground'} hover:text-foreground transition-colors`}
+      >
+        Hin
+      </button>
+    </div>
   );
 
   const UserAccountNav = () => (
@@ -96,7 +93,7 @@ export default function Header() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => setProfileDialogOpen(true)}>
+          <DropdownMenuItem onSelect={() => router.push('/my-activities?tab=profile')}>
              <UserCog className="mr-2 h-4 w-4" />
              <span>{t('header.myProfile')}</span>
           </DropdownMenuItem>
@@ -119,7 +116,6 @@ export default function Header() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <ProfileDialog open={isProfileDialogOpen} onOpenChange={setProfileDialogOpen} />
     </>
   );
 
@@ -159,7 +155,7 @@ export default function Header() {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-1 bg-secondary/30 pb-4">
                         <SheetClose asChild>
-                            <button onClick={() => setProfileDialogOpen(true)} className="flex w-full items-center gap-2 py-2 px-4 pl-12 text-left text-base font-medium hover:text-primary transition-colors hover:bg-secondary">
+                            <button onClick={() => router.push('/my-activities?tab=profile')} className="flex w-full items-center gap-2 py-2 px-4 pl-12 text-left text-base font-medium hover:text-primary transition-colors hover:bg-secondary">
                                 <UserCog className="h-4 w-4" />
                                 <span>{t('header.myProfile')}</span>
                             </button>
@@ -192,18 +188,20 @@ export default function Header() {
           </div>
 
           <div className="border-t mt-auto p-4 space-y-6">
-              <div>
-                  <p className="mb-2 text-sm font-medium text-muted-foreground">{t('header.language')}</p>
-                  <RadioGroup defaultValue={language} onValueChange={(value) => setLanguage(value as Language)} className="flex gap-4">
-                      <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="en" id="lang-en-mobile" />
-                          <Label htmlFor="lang-en-mobile">{t('header.english')}</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="hi" id="lang-hi-mobile" />
-                          <Label htmlFor="lang-hi-mobile">{t('header.hindi')}</Label>
-                      </div>
-                  </RadioGroup>
+              <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setLanguage('en')}
+                    className={`text-base font-medium ${language === 'en' ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
+                  >
+                    Eng
+                  </button>
+                  <span className="text-muted-foreground">|</span>
+                  <button
+                    onClick={() => setLanguage('hi')}
+                    className={`text-base font-medium ${language === 'hi' ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
+                  >
+                    Hin
+                  </button>
               </div>
 
               <div>
@@ -254,7 +252,7 @@ export default function Header() {
               ))}
             </nav>
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-4">
                   {user ? (
                     <UserAccountNav />
                   ) : (

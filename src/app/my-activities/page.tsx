@@ -19,21 +19,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import RatingDialog from '@/components/rating-dialog';
-import ProfileDialog from '@/components/profile-dialog';
-import { useRouter } from 'next/navigation';
+import ProfileForm from '@/components/profile-form';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function MyActivitiesPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activities, setActivities] = useState<UserActivity[]>([]);
   const [addedLeaders, setAddedLeaders] = useState<Leader[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState(true);
   const [isLoadingLeaders, setIsLoadingLeaders] = useState(true);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const [isRatingDialogOpen, setRatingDialogOpen] = useState(false);
-  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<UserActivity | null>(null);
+  const [activeTab, setActiveTab] = useState('ratings');
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const fetchActivities = async () => {
       if (user) {
@@ -54,9 +63,12 @@ function MyActivitiesPage() {
   };
   
   useEffect(() => {
-    fetchActivities();
-    fetchAddedLeaders();
-  }, [user]);
+    if (user && !hasFetched) {
+      fetchActivities();
+      fetchAddedLeaders();
+      setHasFetched(true);
+    }
+  }, [user, hasFetched]);
 
   const handleEditRating = (activity: UserActivity) => {
     setEditingActivity(activity);
@@ -96,13 +108,6 @@ function MyActivitiesPage() {
     </div>
   );
 
-  const ProfileInfo = ({ label, value }: {label: string, value: string | number | undefined}) => (
-    <div>
-        <Label className="text-sm text-muted-foreground">{label}</Label>
-        <p className="text-base font-medium">{value || '-'}</p>
-    </div>
-  );
-
   return (
     <>
       <div className="flex flex-col min-h-screen bg-secondary/50">
@@ -115,7 +120,7 @@ function MyActivitiesPage() {
                 </p>
             </div>
 
-            <Tabs defaultValue="ratings" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="ratings">{t('myActivitiesPage.ratingsTab')}</TabsTrigger>
                 <TabsTrigger value="added-leaders">{t('myActivitiesPage.addedLeadersTab')}</TabsTrigger>
@@ -132,7 +137,7 @@ function MyActivitiesPage() {
                     {isLoadingActivities ? (
                       <ActivitySkeleton />
                     ) : activities.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {activities.map((activity) => (
                           <ActivityCard key={activity.leaderId} activity={activity} onEdit={() => handleEditRating(activity)} />
                         ))}
@@ -144,7 +149,7 @@ function MyActivitiesPage() {
                         <p className="mt-2 text-muted-foreground max-w-md mx-auto">
                           {t('myActivitiesPage.noActivitiesDescription')}
                         </p>
-                        <Button asChild className="mt-6">
+                        <Button asChild className="mt-6" size="lg">
                             <Link href="/rate-leader">{t('hero.findLeader')}</Link>
                         </Button>
                       </div>
@@ -180,7 +185,7 @@ function MyActivitiesPage() {
                         <p className="mt-2 text-muted-foreground max-w-md mx-auto">
                            {t('myActivitiesPage.noAddedLeadersDescription')}
                         </p>
-                        <Button asChild className="mt-6">
+                        <Button asChild className="mt-6" size="lg">
                             <Link href="/add-leader">{t('hero.addNewLeader')}</Link>
                         </Button>
                       </div>
@@ -191,31 +196,15 @@ function MyActivitiesPage() {
               
               <TabsContent value="profile" className="mt-6">
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <UserCog className="w-6 h-6 text-primary" />
-                        {t('myActivitiesPage.profileTabTitle')}
-                      </CardTitle>
-                      <CardDescription>{t('myActivitiesPage.profileTabDescription')}</CardDescription>
-                    </div>
-                    <Button onClick={() => setProfileDialogOpen(true)}>
-                      <Edit /> {t('profileDialog.editButton')}
-                    </Button>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCog className="w-6 h-6 text-primary" />
+                      {t('myActivitiesPage.profileTabTitle')}
+                    </CardTitle>
+                    <CardDescription>{t('myActivitiesPage.profileTabDescription')}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <ProfileInfo label={t('profileDialog.nameLabel')} value={user?.name} />
-                        <ProfileInfo label={t('profileDialog.genderLabel')} value={user?.gender} />
-                        <ProfileInfo label={t('profileDialog.ageLabel')} value={user?.age} />
-                    </div>
-                    <Separator />
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <ProfileInfo label={t('profileDialog.stateLabel')} value={user?.state} />
-                        <ProfileInfo label={t('profileDialog.mpConstituencyLabel')} value={user?.mpConstituency} />
-                        <ProfileInfo label={t('profileDialog.mlaConstituencyLabel')} value={user?.mlaConstituency} />
-                        <ProfileInfo label={t('profileDialog.panchayatLabel')} value={user?.panchayat} />
-                    </div>
+                  <CardContent>
+                    <ProfileForm />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -235,8 +224,6 @@ function MyActivitiesPage() {
           initialSocialBehaviour={editingActivity.socialBehaviour}
         />
       )}
-
-      <ProfileDialog open={isProfileDialogOpen} onOpenChange={setProfileDialogOpen} />
     </>
   );
 }

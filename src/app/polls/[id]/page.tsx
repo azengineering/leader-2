@@ -114,7 +114,7 @@ function PollParticipationPage() {
                             <div className="flex justify-end">
                                 <Button size="lg" onClick={handleSubmit} disabled={isSubmitting}>
                                     {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2" />}
-                                    Submit My Vote
+                                    {t('polls.submitMyVote')}
                                 </Button>
                             </div>
                         </CardContent>

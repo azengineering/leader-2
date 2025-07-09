@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -36,9 +35,9 @@ export default function Hero() {
 
   return (
     <>
-      <section className="relative bg-gradient-to-br from-primary/10 via-background to-background pt-24 pb-20 md:pt-32 md:pb-28 text-center overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-primary/5 to-transparent to-70% opacity-50"></div>
-          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-accent/5 to-transparent to-70% opacity-50"></div>
+      <section className="relative bg-gradient-to-br from-primary/10 via-background to-background pt-12 pb-10 md:pt-16 md:pb-14 text-center overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-primary/5 to-transparent to-70% opacity-50"></div>
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-accent/5 to-transparent to-70% opacity-50"></div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <Badge
@@ -61,7 +60,7 @@ export default function Hero() {
                 </Button>
                </Link>
                 <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20" asChild>
-                    <Link href="/polls">Participate in Polls</Link>
+                    <Link href="/polls">{t('hero.participateInPolls')}</Link>
                 </Button>
                <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90 shadow-lg" onClick={handleAddLeaderClick}>
                   {t('hero.addNewLeader')}

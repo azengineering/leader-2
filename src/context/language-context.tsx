@@ -9,7 +9,7 @@ export type Language = 'en' | 'hi';
 interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -17,7 +17,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
 
-  const t = (key: string): string => {
+  const t = (key: string, replacements?: Record<string, string | number>): string => {
     const keys = key.split('.');
     let result: any = translations[language];
     for (const k of keys) {
@@ -32,7 +32,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
             return key;
           }
         }
+        // If fallbackResult is a string, apply replacements
+        if (typeof fallbackResult === 'string' && replacements) {
+          for (const [placeholder, value] of Object.entries(replacements)) {
+            fallbackResult = fallbackResult.replace(`{${placeholder}}`, String(value));
+          }
+        }
         return fallbackResult;
+      }
+    }
+    // If result is a string, apply replacements
+    if (typeof result === 'string' && replacements) {
+      for (const [placeholder, value] of Object.entries(replacements)) {
+        result = result.replace(`{${placeholder}}`, String(value));
       }
     }
     return result || key;

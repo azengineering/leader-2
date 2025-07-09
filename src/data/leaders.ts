@@ -231,7 +231,17 @@ export async function getActivitiesForUser(userId: string): Promise<UserActivity
         console.error('Error getting user activities:', error);
         return [];
     }
-    return data;
+
+    // For each activity, fetch the full leader details
+    const activitiesWithLeaders = await Promise.all(data.map(async (activity: UserActivity) => {
+        const leader = await getLeaderById(activity.leaderId);
+        return {
+            ...activity,
+            leader: leader || {} as Leader // Ensure leader is always an object, even if empty
+        };
+    }));
+
+    return activitiesWithLeaders;
 }
 
 export async function getAllActivities(): Promise<UserActivity[]> {

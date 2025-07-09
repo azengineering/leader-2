@@ -24,7 +24,7 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works-section" className="py-16 md:py-24 bg-background scroll-mt-20">
+    <section id="how-it-works-section" className="py-8 md:py-12 bg-background scroll-mt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="font-headline text-3xl md:text-4xl font-extrabold">{t('howItWorks.heading')}</h2>
