@@ -57,7 +57,7 @@ export default function ProfileForm() {
     if (user) {
       form.reset({
         name: user.name || "",
-        gender: user.gender || "",
+        gender: (user.gender as "" | "male" | "female" | "other" | undefined) || "",
         age: user.age || undefined,
         state: user.state || "",
         mpConstituency: user.mpConstituency || "",
@@ -77,7 +77,18 @@ export default function ProfileForm() {
 
   const onSubmit = async (values: z.infer<typeof profileSchema>) => {
     try {
-      await updateUser(values);
+      const updatedUser = await updateUser(values);
+      if (updatedUser) {
+        form.reset({
+          name: updatedUser.name || "",
+          gender: (updatedUser.gender as "" | "male" | "female" | "other" | undefined) || "",
+          age: updatedUser.age || undefined,
+          state: updatedUser.state || "",
+          mpConstituency: updatedUser.mpConstituency || "",
+          mlaConstituency: updatedUser.mlaConstituency || "",
+          panchayat: updatedUser.panchayat || "",
+        });
+      }
       toast({
         title: t('profileDialog.successTitle'),
         description: t('profileDialog.successDescription'),
@@ -94,8 +105,8 @@ export default function ProfileForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 text-sm">
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
            <FormField
               control={form.control}
               name="name"
@@ -148,7 +159,7 @@ export default function ProfileForm() {
               )}
             />
          </div>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <FormField
               control={form.control}
               name="state"
@@ -183,7 +194,7 @@ export default function ProfileForm() {
               )}
             />
          </div>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
              <FormField
               control={form.control}
               name="mlaConstituency"
@@ -211,7 +222,7 @@ export default function ProfileForm() {
               )}
             />
          </div>
-         <div className="flex justify-end gap-2 pt-4">
+         <div className="flex justify-end gap-2 pt-3">
             <Button type="button" variant="outline" onClick={handleReset}>
               <RotateCw />
               {t('profileDialog.resetButton')}

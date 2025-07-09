@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Vote } from 'lucide-react';
+import { Vote, Search, BarChart, UserPlus } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
@@ -53,17 +53,28 @@ export default function Hero() {
             <p className="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground">
               {t('hero.description')}
             </p>
-            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-4 justify-center">
-               <Link href="/rate-leader">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                    {t('hero.findLeader')}
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+               <Link href="/rate-leader" className="w-full">
+                <Button size="sm" className="w-full py-6 text-base bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-500/30 transition-all duration-300 group rounded-full">
+                    <div className="flex items-center">
+                      <Search className="w-6 h-6 mr-3 transition-transform duration-300 group-hover:scale-110" />
+                      <span className="font-semibold">{t('hero.findLeader')}</span>
+                    </div>
                 </Button>
                </Link>
-                <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20" asChild>
-                    <Link href="/polls">{t('hero.participateInPolls')}</Link>
+                <Button size="sm" className="w-full py-6 text-base bg-teal-600 text-white hover:bg-teal-700 shadow-lg shadow-teal-500/30 transition-all duration-300 group rounded-full" asChild>
+                    <Link href="/polls">
+                      <div className="flex items-center">
+                        <BarChart className="w-6 h-6 mr-3 transition-transform duration-300 group-hover:scale-110" />
+                        <span className="font-semibold">{t('hero.participateInPolls')}</span>
+                      </div>
+                    </Link>
                 </Button>
-               <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90 shadow-lg" onClick={handleAddLeaderClick}>
-                  {t('hero.addNewLeader')}
+               <Button size="sm" className="w-full py-6 text-base bg-orange-600 text-white hover:bg-orange-700 shadow-lg shadow-orange-500/30 transition-all duration-300 group rounded-full" onClick={handleAddLeaderClick}>
+                  <div className="flex items-center">
+                    <UserPlus className="w-6 h-6 mr-3 transition-transform duration-300 group-hover:scale-110" />
+                    <span className="font-semibold">{t('hero.addNewLeader')}</span>
+                  </div>
               </Button>
             </div>
         </div>

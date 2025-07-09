@@ -22,19 +22,30 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Bell, PlusCircle, Edit, Trash2, CalendarIcon, Loader2, ChevronLeft } from 'lucide-react';
+import { Bell, PlusCircle, Edit, Trash2, CalendarIcon, Loader2, ChevronLeft, Users, Plus, Save } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
+import { indianStates } from '@/data/locations';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const notificationSchema = z.object({
     message: z.string().min(1, 'Message cannot be empty.'),
     dateRange: z.object({
-        from: z.date().optional(),
+        from: z.date(), // 'from' is now required
         to: z.date().optional(),
     }).optional(),
     startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
     endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
     isActive: z.boolean(),
+    target_filters: z.object({
+        states: z.array(z.string()).optional(),
+        constituencies: z.array(z.string()).optional(),
+        gender: z.array(z.string()).optional(),
+        age_min: z.number().min(18).max(100).optional(),
+        age_max: z.number().min(18).max(100).optional(),
+    }).optional(),
 });
 
 type NotificationFormData = z.infer<typeof notificationSchema>;
@@ -70,15 +81,24 @@ export default function AdminNotificationsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
+    const [constituencyInput, setConstituencyInput] = useState('');
+
 
     const form = useForm<NotificationFormData>({
         resolver: zodResolver(notificationSchema),
         defaultValues: {
             message: '',
-            dateRange: { from: undefined, to: undefined },
+            dateRange: { from: new Date(), to: undefined }, // 'from' is now required
             startTime: '00:00',
             endTime: '23:59',
             isActive: true,
+            target_filters: {
+                states: [],
+                constituencies: [],
+                gender: [],
+                age_min: undefined,
+                age_max: undefined,
+            },
         },
     });
 
@@ -100,19 +120,35 @@ export default function AdminNotificationsPage() {
             const end = notification.endTime ? parseISO(notification.endTime) : null;
             form.reset({
                 message: notification.message,
-                dateRange: { from: start || undefined, to: end || undefined },
+                dateRange: { from: start || new Date(), to: end || undefined }, // Ensure 'from' is always a Date
                 startTime: start ? format(start, 'HH:mm') : '00:00',
                 endTime: end ? format(end, 'HH:mm') : '23:59',
                 isActive: notification.isActive,
+                target_filters: notification.target_filters || {
+                    states: [],
+                    constituencies: [],
+                    gender: [],
+                    age_min: undefined,
+                    age_max: undefined,
+                },
             });
+            setConstituencyInput(''); // Clear constituency input when opening dialog
         } else {
             form.reset({
                 message: '',
-                dateRange: { from: new Date(), to: undefined },
+                dateRange: { from: new Date(), to: undefined }, // Ensure 'from' is always a Date
                 startTime: '00:00',
                 endTime: '23:59',
                 isActive: true,
+                target_filters: {
+                    states: [],
+                    constituencies: [],
+                    gender: [],
+                    age_min: undefined,
+                    age_max: undefined,
+                },
             });
+            setConstituencyInput(''); // Clear constituency input when opening dialog
         }
         setIsDialogOpen(true);
     };
@@ -140,6 +176,13 @@ export default function AdminNotificationsPage() {
                 isActive: data.isActive,
                 startTime: startDateTime,
                 endTime: endDateTime,
+                target_filters: data.target_filters && (
+                    data.target_filters.states?.length || 
+                    data.target_filters.constituencies?.length || 
+                    data.target_filters.gender?.length ||
+                    data.target_filters.age_min ||
+                    data.target_filters.age_max
+                ) ? data.target_filters : undefined,
             };
 
             if (editingNotification) {
@@ -255,59 +298,336 @@ export default function AdminNotificationsPage() {
             </Card>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-2xl">
+                <DialogContent className="sm:max-w-2xl overflow-y-auto max-h-[90vh]">
                     <DialogHeader>
                         <DialogTitle>{editingNotification ? 'Edit' : 'Add'} Notification</DialogTitle>
                         <DialogDescription>Set the message and schedule for your notification.</DialogDescription>
                     </DialogHeader>
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-                            <FormField control={form.control} name="message" render={({ field }) => (
-                                <FormItem><FormLabel>Message</FormLabel><FormControl><Textarea {...field} rows={4} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <FormField control={form.control} name="dateRange" render={({ field }) => (
-                                    <FormItem className="flex flex-col">
-                                        <FormLabel>Date Range (Optional)</FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button id="date" variant={"outline"} className={cn("w-full justify-start text-left font-normal", !field.value?.from && "text-muted-foreground")}>
-                                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                                        {field.value?.from ? (field.value.to ? (<>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</>) : (format(field.value.from, "LLL dd, y"))) : (<span>Pick a date range</span>)}
-                                                    </Button>
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar initialFocus mode="range" selected={field.value} onSelect={field.onChange} numberOfMonths={2} />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
-                                <div className="flex items-center gap-2">
-                                    <FormField control={form.control} name="startTime" render={({ field }) => (
-                                        <FormItem><FormLabel>Start Time</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <Card className="p-4">
+                                <CardHeader className="p-0 pb-4">
+                                    <CardTitle className="text-lg">Notification Details</CardTitle>
+                                    <CardDescription>Define the core content and visibility of your announcement.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0 space-y-4">
+                                    <FormField control={form.control} name="message" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Message</FormLabel>
+                                            <FormControl>
+                                                <Textarea {...field} rows={4} placeholder="Enter your notification message here..." />
+                                            </FormControl>
+                                            <FormDescription>This message will be displayed to users.</FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
                                     )}/>
-                                    <FormField control={form.control} name="endTime" render={({ field }) => (
-                                        <FormItem><FormLabel>End Time</FormLabel><FormControl><Input type="time" {...field} /></FormControl><FormMessage /></FormItem>
+                                    <FormField control={form.control} name="isActive" render={({ field }) => (
+                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                                            <div className="space-y-0.5">
+                                                <FormLabel>Activate Notification</FormLabel>
+                                                <FormDescription>Turn this on to make the notification visible on the site.</FormDescription>
+                                            </div>
+                                            <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                        </FormItem>
                                     )}/>
-                                </div>
-                            </div>
-                             <FormField control={form.control} name="isActive" render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                                    <div className="space-y-0.5">
-                                        <FormLabel>Activate Notification</FormLabel>
-                                        <FormDescription>Turn this on to make the notification visible on the site.</FormDescription>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="p-4">
+                                <CardHeader className="p-0 pb-4">
+                                    <CardTitle className="text-lg">Schedule</CardTitle>
+                                    <CardDescription>Set the start and end dates/times for the notification to be active.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0 space-y-4">
+                                    <FormField control={form.control} name="dateRange" render={({ field }) => (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>Date Range (Optional)</FormLabel>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <FormControl>
+                                                        <Button id="date" variant={"outline"} className={cn("w-full justify-start text-left font-normal", !field.value?.from && "text-muted-foreground")}>
+                                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                                            {field.value?.from ? (field.value.to ? (<>{format(field.value.from, "LLL dd, y")} - {format(field.value.to, "LLL dd, y")}</>) : (format(field.value.from, "LLL dd, y"))) : (<span>Pick a date range</span>)}
+                                                        </Button>
+                                                    </FormControl>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="start">
+                                                    <Calendar initialFocus mode="range" selected={field.value || undefined} onSelect={field.onChange} numberOfMonths={2} />
+                                                </PopoverContent>
+                                            </Popover>
+                                            <FormDescription>The period during which the notification will be active.</FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}/>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <FormField control={form.control} name="startTime" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Start Time</FormLabel>
+                                                <FormControl><Input type="time" {...field} /></FormControl>
+                                                <FormDescription>The time the notification becomes active.</FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                        <FormField control={form.control} name="endTime" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>End Time</FormLabel>
+                                                <FormControl><Input type="time" {...field} /></FormControl>
+                                                <FormDescription>The time the notification becomes inactive.</FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
                                     </div>
-                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                </FormItem>
-                            )}/>
-                             <DialogFooter>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="p-4">
+                                <CardHeader className="p-0 pb-4">
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                        <Users className="h-5 w-5" />
+                                        Target Audience (Optional)
+                                    </CardTitle>
+                                    <CardDescription>Define specific user groups to target this notification. Leave blank to target all users.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0 space-y-6">
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                form.setValue('target_filters.states', []);
+                                                form.setValue('target_filters.constituencies', []);
+                                                form.setValue('target_filters.gender', []);
+                                                form.setValue('target_filters.age_min', undefined);
+                                                form.setValue('target_filters.age_max', undefined);
+                                                setConstituencyInput('');
+                                            }}
+                                        >
+                                            Clear All Filters
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => form.setValue('target_filters.states', indianStates)}
+                                        >
+                                            Select All States
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel>States ({form.watch('target_filters.states')?.length || 0}/{indianStates.length})</FormLabel>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border rounded-lg bg-muted/20">
+                                            {indianStates.map((state) => (
+                                                <FormField
+                                                    key={state}
+                                                    control={form.control}
+                                                    name="target_filters.states"
+                                                    render={({ field }) => (
+                                                        <FormItem className="flex flex-row items-start space-x-2 space-y-0">
+                                                            <FormControl>
+                                                                <Checkbox
+                                                                    checked={field.value?.includes(state)}
+                                                                    onCheckedChange={(checked) => {
+                                                                        const currentStates = field.value || [];
+                                                                        if (checked) {
+                                                                            field.onChange([...currentStates, state]);
+                                                                        } else {
+                                                                            field.onChange(currentStates.filter(s => s !== state));
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </FormControl>
+                                                            <FormLabel className="text-xs font-normal cursor-pointer">
+                                                                {state}
+                                                            </FormLabel>
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            ))}
+                                        </div>
+                                        <FormDescription>Select specific states to target.</FormDescription>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel>Constituencies ({form.watch('target_filters')?.constituencies?.length || 0})</FormLabel>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="MP/MLA/Panchayat constituency name"
+                                                value={constituencyInput}
+                                                onChange={(e) => setConstituencyInput(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        const value = constituencyInput.trim();
+                                                        if (value) {
+                                                            const currentConstituencies = form.getValues('target_filters.constituencies') || [];
+                                                            if (!currentConstituencies.includes(value)) {
+                                                                form.setValue('target_filters.constituencies', [...currentConstituencies, value]);
+                                                            }
+                                                            setConstituencyInput('');
+                                                        }
+                                                    }
+                                                }}
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    const value = constituencyInput.trim();
+                                                    if (value) {
+                                                        const currentConstituencies = form.getValues('target_filters.constituencies') || [];
+                                                        if (!currentConstituencies.includes(value)) {
+                                                            form.setValue('target_filters.constituencies', [...currentConstituencies, value]);
+                                                        }
+                                                        setConstituencyInput('');
+                                                    }
+                                                }}
+                                            >
+                                                <Plus className="h-4 w-4" /> Add
+                                            </Button>
+                                        </div>
+                                        {form.watch('target_filters.constituencies')?.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-2 p-2 border rounded-lg bg-muted/20 max-h-32 overflow-y-auto">
+                                                {form.watch('target_filters.constituencies')?.map((constituency, index) => (
+                                                    <Badge key={index} variant="secondary" className="flex items-center gap-1 text-xs">
+                                                        {constituency}
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentConstituencies = form.getValues('target_filters.constituencies') || [];
+                                                                const filteredConstituencies = currentConstituencies.filter((_, i) => i !== index);
+                                                                form.setValue('target_filters.constituencies', filteredConstituencies);
+                                                            }}
+                                                            className="h-3 w-3 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                                        >
+                                                            <Trash2 className="h-2 w-2" />
+                                                        </Button>
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <FormDescription>Add specific constituencies to target.</FormDescription>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <FormLabel>Gender ({form.watch('target_filters.gender')?.length || 0})</FormLabel>
+                                            <div className="flex gap-2 p-2 border rounded-lg bg-muted/20">
+                                                {['Male', 'Female', 'Other'].map((gender) => (
+                                                    <FormField
+                                                        key={gender}
+                                                        control={form.control}
+                                                        name="target_filters.gender"
+                                                        render={({ field }) => (
+                                                            <FormItem className="flex flex-row items-start space-x-2 space-y-0">
+                                                                <FormControl>
+                                                                    <Checkbox
+                                                                        checked={field.value?.includes(gender)}
+                                                                        onCheckedChange={(checked) => {
+                                                                            const currentGenders = field.value || [];
+                                                                            if (checked) {
+                                                                                field.onChange([...currentGenders, gender]);
+                                                                            } else {
+                                                                                field.onChange(currentGenders.filter(g => g !== gender));
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormLabel className="text-sm font-normal cursor-pointer">
+                                                                    {gender}
+                                                                </FormLabel>
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <FormDescription>Select genders to target.</FormDescription>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <FormLabel>Age Range</FormLabel>
+                                            <div className="flex gap-2 items-center p-2 border rounded-lg bg-muted/20">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="target_filters.age_min"
+                                                    render={({ field }) => (
+                                                        <FormItem className="flex-1">
+                                                            <FormControl>
+                                                                <Input
+                                                                    type="number"
+                                                                    min="18"
+                                                                    max="100"
+                                                                    placeholder="Min"
+                                                                    value={field.value || ''}
+                                                                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <span className="text-sm text-muted-foreground">to</span>
+                                                <FormField
+                                                    control={form.control}
+                                                    name="target_filters.age_max"
+                                                    render={({ field }) => (
+                                                        <FormItem className="flex-1">
+                                                            <FormControl>
+                                                                <Input
+                                                                    type="number"
+                                                                    min="18"
+                                                                    max="100"
+                                                                    placeholder="Max"
+                                                                    value={field.value || ''}
+                                                                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                            <FormDescription>Define a minimum and maximum age for the target audience.</FormDescription>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <DialogFooter className="pt-4">
                                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        form.reset({
+                                            message: '',
+                                            dateRange: { from: new Date(), to: undefined }, // Ensure 'from' is always a Date
+                                            startTime: '00:00',
+                                            endTime: '23:59',
+                                            isActive: true,
+                                            target_filters: {
+                                                states: [],
+                                                constituencies: [],
+                                                gender: [],
+                                                age_min: undefined,
+                                                age_max: undefined,
+                                            },
+                                        });
+                                        setConstituencyInput('');
+                                    }}
+                                >
+                                    Clear Form
+                                </Button>
                                 <Button type="submit" disabled={isSubmitting}>
                                     {isSubmitting && <Loader2 className="mr-2 animate-spin" />}
-                                    Save Notification
+                                    <Save className="mr-2 h-4 w-4" /> Save Notification
                                 </Button>
                             </DialogFooter>
                         </form>

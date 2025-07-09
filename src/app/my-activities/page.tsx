@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import RatingDialog from '@/components/rating-dialog';
+import ProfileDetails from '@/components/profile-details';
 import ProfileForm from '@/components/profile-form';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -203,7 +204,9 @@ function MyActivitiesPage() {
                     </CardTitle>
                     <CardDescription>{t('myActivitiesPage.profileTabDescription')}</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-6">
+                    <ProfileDetails />
+                    <Separator />
                     <ProfileForm />
                   </CardContent>
                 </Card>

@@ -26,7 +26,7 @@ export default function NotificationBanner() {
     const [isVisible, setIsVisible] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, loading } = useAuth(); // Destructure loading from useAuth
     const [showLoginDialog, setShowLoginDialog] = useState(false);
     const [pollRedirectUrl, setPollRedirectUrl] = useState<string | null>(null);
 
@@ -38,15 +38,22 @@ export default function NotificationBanner() {
         }
 
         const fetchNotifications = async () => {
-            const activeNotifications = await getActiveNotifications();
+            // Pass the user object to getActiveNotifications for filtering
+            // If user is null (not logged in), getActiveNotifications will handle it
+            const activeNotifications = await getActiveNotifications(user);
             setNotifications(activeNotifications);
             if (activeNotifications.length > 0) {
                 setIsVisible(true);
+            } else {
+                setIsVisible(false); // Hide banner if no active notifications
             }
         };
 
-        fetchNotifications();
-    }, [pathname]);
+        // Only fetch notifications once auth state is determined
+        if (!loading) {
+            fetchNotifications();
+        }
+    }, [pathname, user, loading]); // Add user and loading to dependency array
 
     useEffect(() => {
         if (!api) return;
