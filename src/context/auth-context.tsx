@@ -27,49 +27,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const handleRedirect = (userProfile: User, redirectPath?: string | null) => {
+    const isProfileComplete = userProfile.name && userProfile.state && userProfile.gender && userProfile.age;
+
+    if (!isProfileComplete) {
+      router.push('/account-settings?incomplete=true');
+    } else if (redirectPath) {
+      router.push(redirectPath);
+    } else {
+      router.push('/');
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setLoading(false);
-          return;
-        }
+        if (event === 'SIGNED_IN' && session?.user) {
+          if (user) {
+            setLoading(false);
+            return;
+          }
+          setLoading(true);
+          let userProfile = await findUserById(session.user.id);
 
-        if (session?.user) {
-          // Only fetch user profile if it's not already loaded
-          // This prevents re-fetching on tab focus
-          if (!user) {
-            let userProfile = await findUserById(session.user.id);
-            
-            if (!userProfile) {
-              const { error: rpcError } = await supabase.rpc('ensure_user_profile_exists');
-              if (rpcError) {
-                console.error("Auth state change: Error ensuring profile exists", rpcError);
-                await supabase.auth.signOut();
-                setUser(null);
-                setLoading(false);
-                return;
-              }
-              userProfile = await findUserById(session.user.id);
-            }
-
-            if (userProfile && !userProfile.isBlocked) {
-              setUser(userProfile);
-            } else {
+          if (!userProfile) {
+            const { error: rpcError } = await supabase.rpc('ensure_user_profile_exists');
+            if (rpcError) {
+              console.error("Auth state change: Error ensuring profile exists", rpcError);
               await supabase.auth.signOut();
               setUser(null);
+              setLoading(false);
+              return;
             }
+            userProfile = await findUserById(session.user.id);
           }
+
+          if (userProfile && !userProfile.isBlocked) {
+            setUser(userProfile);
+            const redirectPath = new URL(window.location.href).searchParams.get('redirect');
+            handleRedirect(userProfile, redirectPath);
+          } else {
+            await supabase.auth.signOut();
+            setUser(null);
+          }
+          setLoading(false);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setLoading(false);
+        } else if (!session?.user) {
+          setUser(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [user]);
   
   const login = async (email: string, password: string, redirectPath?: string | null) => {
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
@@ -109,11 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (userProfile) {
         setUser(userProfile); // Set state BEFORE redirecting
-        if (redirectPath) {
-          router.push(redirectPath);
-        } else {
-          router.push('/');
-        }
+        handleRedirect(userProfile, redirectPath);
       } else {
         await supabase.auth.signOut();
         throw new Error("Login successful, but your profile could not be found or created. Please contact support.");

@@ -18,9 +18,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/context/language-context';
-import { useAuth } from '@/context/auth-context';
 import { useToast } from "@/hooks/use-toast";
 import { indianStates } from '@/data/locations';
+import type { User } from '@/data/users';
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required."),
@@ -35,9 +35,13 @@ const profileSchema = z.object({
   panchayat: z.string().optional(),
 });
 
-export default function ProfileForm() {
+interface ProfileFormProps {
+  user: User | null;
+  onSave: (data: Partial<User>) => void;
+}
+
+export default function ProfileForm({ user, onSave }: ProfileFormProps) {
   const { t } = useLanguage();
-  const { user, updateUser } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -76,31 +80,7 @@ export default function ProfileForm() {
   }
 
   const onSubmit = async (values: z.infer<typeof profileSchema>) => {
-    try {
-      const updatedUser = await updateUser(values);
-      if (updatedUser) {
-        form.reset({
-          name: updatedUser.name || "",
-          gender: (updatedUser.gender as "" | "male" | "female" | "other" | undefined) || "",
-          age: updatedUser.age || undefined,
-          state: updatedUser.state || "",
-          mpConstituency: updatedUser.mpConstituency || "",
-          mlaConstituency: updatedUser.mlaConstituency || "",
-          panchayat: updatedUser.panchayat || "",
-        });
-      }
-      toast({
-        title: t('profileDialog.successTitle'),
-        description: t('profileDialog.successDescription'),
-      });
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: t('profileDialog.errorTitle'),
-        description: error instanceof Error ? error.message : String(error),
-      });
-    }
+    onSave(values);
   };
 
   return (

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -166,14 +165,13 @@ const PollsSkeleton = () => (
 );
 
 function PollsPageContent() {
-    const { user } = useAuth();
-    const { t } = useLanguage(); // Import useLanguage
+    const { user, loading: authLoading } = useAuth();
+    const { t } = useLanguage();
     const router = useRouter();
     const [polls, setPolls] = useState<(PollListItem & { user_has_voted: boolean; description: string | null; })[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showLoginDialog, setShowLoginDialog] = useState(false);
     const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
-    const [hasFetched, setHasFetched] = useState(false); // Added hasFetched state
     const searchParams = useSearchParams();
 
     useEffect(() => {
@@ -192,22 +190,17 @@ function PollsPageContent() {
 
     useEffect(() => {
         const fetchPolls = async () => {
-            if (user && !hasFetched) { // Only fetch if user exists and not already fetched
+            if (user) {
                 setIsLoading(true);
                 const pollsData = await getActivePollsForUser(user.id);
                 setPolls(pollsData);
                 setIsLoading(false);
-                setHasFetched(true); // Mark as fetched
-            } else if (!user && !hasFetched) { // For non-logged in users, fetch once
-                setIsLoading(true);
-                const pollsData = await getActivePollsForUser(null);
-                setPolls(pollsData);
+            } else if (!authLoading) {
                 setIsLoading(false);
-                setHasFetched(true);
             }
         };
         fetchPolls();
-    }, [user, hasFetched]); // Added hasFetched to dependency array
+    }, [user, authLoading]);
     
     const handleParticipate = (pollId: string) => {
         if (!user) {
@@ -230,19 +223,30 @@ function PollsPageContent() {
                         </p>
                     </div>
 
-                    {isLoading ? (
+                    {authLoading || isLoading ? (
                         <PollsSkeleton />
-                    ) : polls.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {polls.map(poll => (
-                                <PollCard key={poll.id} poll={poll} onParticipateClick={handleParticipate} />
-                            ))}
-                        </div>
+                    ) : user ? (
+                        polls.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {polls.map(poll => (
+                                    <PollCard key={poll.id} poll={poll} onParticipateClick={handleParticipate} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-24 px-4 rounded-lg bg-background border-2 border-dashed">
+                                <Vote className="w-16 h-16 mx-auto text-muted-foreground" />
+                                <h2 className="mt-6 text-2xl font-semibold">{t('pollsPage.noPollsTitle')}</h2>
+                                <p className="mt-2 text-muted-foreground">{t('pollsPage.noPollsDescription')}</p>
+                            </div>
+                        )
                     ) : (
                         <div className="text-center py-24 px-4 rounded-lg bg-background border-2 border-dashed">
                             <Vote className="w-16 h-16 mx-auto text-muted-foreground" />
-                            <h2 className="mt-6 text-2xl font-semibold">{t('pollsPage.noPollsTitle')}</h2> {/* Use translation */}
-                            <p className="mt-2 text-muted-foreground">{t('pollsPage.noPollsDescription')}</p> {/* Use translation */}
+                            <h2 className="mt-6 text-2xl font-semibold">{t('pollsPage.loginRequiredTitle')}</h2>
+                            <p className="mt-2 text-muted-foreground">{t('pollsPage.loginRequiredDescription')}</p>
+                            <Button onClick={() => router.push('/login?redirect=/polls')} className="mt-6">
+                                {t('pollsPage.login')}
+                            </Button>
                         </div>
                     )}
                 </main>
@@ -252,15 +256,15 @@ function PollsPageContent() {
             <AlertDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>{t('pollsPage.loginRequiredTitle')}</AlertDialogTitle> {/* Use translation */}
+                        <AlertDialogTitle>{t('pollsPage.loginRequiredTitle')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            {t('pollsPage.loginRequiredDescription')} {/* Use translation */}
+                            {t('pollsPage.loginRequiredDescription')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setSelectedPollId(null)}>{t('pollsPage.cancel')}</AlertDialogCancel> {/* Use translation */}
+                        <AlertDialogCancel onClick={() => setSelectedPollId(null)}>{t('pollsPage.cancel')}</AlertDialogCancel>
                         <AlertDialogAction onClick={() => router.push(`/login?redirect=/polls/${selectedPollId}`)}>
-                            {t('pollsPage.login')} {/* Use translation */}
+                            {t('pollsPage.login')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -12,43 +12,36 @@ export default function AboutPage() {
     <div className="flex flex-col min-h-screen bg-background"> {/* Changed background */}
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <Card className="text-center p-10 shadow-lg mb-12 bg-card border border-border"> {/* Reverted to bg-card, added border, increased padding, more prominent shadow */}
-          <CardHeader className="pb-6"> {/* Increased padding */}
-            <Users className="w-16 h-16 text-primary mx-auto mb-4" /> {/* Slightly larger, primary color icon */}
-            <CardTitle className="text-4xl md:text-5xl font-bold font-headline text-primary">{t('aboutPage.title')}</CardTitle> {/* Primary color for title */}
-          </CardHeader>
-          <CardContent>
-            <CardDescription className="mt-4 max-w-3xl mx-auto text-xl md:text-2xl text-muted-foreground"> {/* Larger text */}
-                {t('aboutPage.mission')}
-            </CardDescription>
-          </CardContent>
-        </Card>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">{t('aboutPage.title')}</h1>
+          <p className="mt-4 max-w-3xl mx-auto text-xl md:text-2xl text-muted-foreground">{t('aboutPage.mission')}</p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <Card className="text-center p-6 shadow-sm"> {/* Adjusted shadow */}
+          <Card className="text-center p-6 shadow-sm">
             <CardHeader className="pb-4">
-              <Lightbulb className="w-10 h-10 text-muted-foreground mx-auto mb-4" /> {/* Smaller, muted icon */}
-              <CardTitle className="text-2xl font-headline text-foreground">{t('aboutPage.visionTitle')}</CardTitle> {/* Changed text color */}
+              <Lightbulb className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+              <CardTitle className="text-2xl font-headline text-foreground">{t('aboutPage.visionTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-muted-foreground">{t('aboutPage.visionDescription')}</CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="text-center p-6 shadow-sm"> {/* Adjusted shadow */}
+          <Card className="text-center p-6 shadow-sm">
             <CardHeader className="pb-4">
-              <Handshake className="w-10 h-10 text-muted-foreground mx-auto mb-4" /> {/* Smaller, muted icon */}
-              <CardTitle className="text-2xl font-headline text-foreground">{t('aboutPage.ourCommitmentTitle')}</CardTitle> {/* Changed text color */}
+              <Handshake className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+              <CardTitle className="text-2xl font-headline text-foreground">{t('aboutPage.ourCommitmentTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-muted-foreground">{t('aboutPage.ourCommitmentDescription')}</CardDescription>
             </CardContent>
           </Card>
 
-          <Card className="text-center p-6 shadow-sm"> {/* Adjusted shadow */}
+          <Card className="text-center p-6 shadow-sm">
             <CardHeader className="pb-4">
-              <Megaphone className="w-10 h-10 text-muted-foreground mx-auto mb-4" /> {/* Smaller, muted icon */}
-              <CardTitle className="text-2xl font-headline text-foreground">{t('aboutPage.joinUsTitle')}</CardTitle> {/* Changed text color */}
+              <Megaphone className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+              <CardTitle className="text-2xl font-headline text-foreground">{t('aboutPage.joinUsTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-muted-foreground">{t('aboutPage.joinUsDescription')}</CardDescription>
