@@ -298,6 +298,13 @@ function LoginContent() {
                       </FormItem>
                     )}
                   />
+                  <div className="flex items-center justify-end">
+                    <Link href="/forgot-password" passHref>
+                      <Button variant="link" className="px-0 text-sm text-muted-foreground hover:text-primary">
+                        Forgot Password?
+                      </Button>
+                    </Link>
+                  </div>
                   <Button 
                     type="submit" 
                     className="w-full py-6 text-lg"

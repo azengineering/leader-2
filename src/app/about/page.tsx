@@ -12,9 +12,9 @@ export default function AboutPage() {
     <div className="flex flex-col min-h-screen bg-background"> {/* Changed background */}
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">{t('aboutPage.title')}</h1>
-          <p className="mt-4 max-w-3xl mx-auto text-xl md:text-2xl text-muted-foreground">{t('aboutPage.mission')}</p>
+        <div className="mb-12">
+          <h1 className="text-2xl md:text-3xl font-bold font-headline text-primary">Empowering Informed Citizenship</h1>
+          <p className="mt-4 max-w-3xl text-lg md:text-xl text-muted-foreground border-l-4 border-primary pl-4 italic">{t('aboutPage.mission')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

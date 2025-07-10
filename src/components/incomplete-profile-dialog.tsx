@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import ProfileForm from './profile-form';
 import type { User } from '@/data/users';
+import { useRouter } from 'next/navigation';
 
 interface IncompleteProfileDialogProps {
   isOpen: boolean;
@@ -16,13 +17,19 @@ interface IncompleteProfileDialogProps {
 
 export default function IncompleteProfileDialog({ isOpen, onClose, onProfileUpdate, user }: IncompleteProfileDialogProps) {
   const { t } = useLanguage();
+  const router = useRouter();
 
   if (!isOpen) {
     return null;
   }
 
+  const handleClose = () => {
+    onClose();
+    router.push('/');
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-headline text-blue-800">{t('incompleteProfileDialog.title')}</DialogTitle>
@@ -35,7 +42,7 @@ export default function IncompleteProfileDialog({ isOpen, onClose, onProfileUpda
         </DialogHeader>
         <ProfileForm user={user} onSave={onProfileUpdate} />
         <DialogFooter className="pt-4 flex justify-end">
-          <Button onClick={onClose} variant="outline">Cancel</Button>
+          <Button onClick={handleClose} variant="outline">Cancel</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
