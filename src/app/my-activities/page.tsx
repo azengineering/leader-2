@@ -17,10 +17,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import RatingDialog from '@/components/rating-dialog';
 import ProfileDetails from '@/components/profile-details';
-import ProfileForm from '@/components/profile-form';
+import ProfileDialog from '@/components/profile-dialog'; // Added import for ProfileDialog
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function MyActivitiesPage() {
@@ -37,6 +36,7 @@ function MyActivitiesPage() {
   const [isRatingDialogOpen, setRatingDialogOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<UserActivity | null>(null);
   const [activeTab, setActiveTab] = useState('ratings');
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false); // State for profile dialog
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -44,6 +44,11 @@ function MyActivitiesPage() {
       setActiveTab(tab);
     }
   }, [searchParams]);
+
+  const handleProfileUpdateSuccess = () => {
+    setIsProfileDialogOpen(false);
+    // Optionally refresh profile details if needed
+  };
 
   const fetchActivities = async () => {
       if (user) {
@@ -197,17 +202,22 @@ function MyActivitiesPage() {
               
               <TabsContent value="profile" className="mt-6">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="flex items-center gap-2">
                       <UserCog className="w-6 h-6 text-primary" />
                       {t('myActivitiesPage.profileTabTitle')}
                     </CardTitle>
-                    <CardDescription>{t('myActivitiesPage.profileTabDescription')}</CardDescription>
+                    <Button
+                      onClick={() => setIsProfileDialogOpen(true)}
+                      className="bg-blue-700 hover:bg-blue-800 text-white" // Deep blue color
+                      size="sm"
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      {t('myActivitiesPage.editProfileButton')}
+                    </Button>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <ProfileDetails />
-                    <Separator />
-                    <ProfileForm />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -227,6 +237,12 @@ function MyActivitiesPage() {
           initialSocialBehaviour={editingActivity.socialBehaviour}
         />
       )}
+
+      <ProfileDialog
+        open={isProfileDialogOpen}
+        onOpenChange={setIsProfileDialogOpen}
+        onProfileUpdateSuccess={handleProfileUpdateSuccess}
+      />
     </>
   );
 }

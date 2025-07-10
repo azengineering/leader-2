@@ -33,23 +33,24 @@ import { indianStates } from '@/data/locations';
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required."),
-  gender: z.enum(['male', 'female', 'other', '']).optional(),
+  gender: z.enum(['male', 'female', 'other'], { required_error: "Gender is required." }),
   age: z.preprocess(
     (val) => (val === "" || val === null ? undefined : val),
-    z.coerce.number({ invalid_type_error: 'Please enter a valid number' }).int().positive("Age must be positive").optional()
+    z.coerce.number({ required_error: "Age is required.", invalid_type_error: 'Please enter a valid number' }).int().positive("Age must be positive")
   ),
-  state: z.string().optional(),
-  mpConstituency: z.string().optional(),
-  mlaConstituency: z.string().optional(),
-  panchayat: z.string().optional(),
+  state: z.string().min(1, "State is required."),
+  mpConstituency: z.string().min(1, "MP Constituency is required."),
+  mlaConstituency: z.string().min(1, "MLA Constituency is required."),
+  panchayat: z.string().min(1, "Panchayat/Corporation is required."),
 });
 
 interface ProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onProfileUpdateSuccess?: () => void; // Added optional prop
 }
 
-export default function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
+export default function ProfileDialog({ open, onOpenChange, onProfileUpdateSuccess }: ProfileDialogProps) {
   const { t } = useLanguage();
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
@@ -59,7 +60,7 @@ export default function ProfileDialog({ open, onOpenChange }: ProfileDialogProps
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: "",
-      gender: "",
+      gender: undefined, // Changed to undefined
       age: undefined,
       state: "",
       mpConstituency: "",
@@ -72,7 +73,7 @@ export default function ProfileDialog({ open, onOpenChange }: ProfileDialogProps
     if (user) {
       form.reset({
         name: user.name || "",
-        gender: user.gender || "",
+        gender: (user.gender === "" ? undefined : user.gender) as "male" | "female" | "other" | undefined, // Explicitly handle empty string
         age: user.age || undefined,
         state: user.state || "",
         mpConstituency: user.mpConstituency || "",
@@ -98,6 +99,9 @@ export default function ProfileDialog({ open, onOpenChange }: ProfileDialogProps
         description: t('profileDialog.successDescription'),
       });
       setIsEditing(false);
+      if (onProfileUpdateSuccess) {
+        onProfileUpdateSuccess();
+      }
     } catch (error) {
       console.error(error);
       toast({
@@ -144,7 +148,7 @@ export default function ProfileDialog({ open, onOpenChange }: ProfileDialogProps
                   render={({ field }) => (
                     <FormItem>
                         <FormLabel>{t('profileDialog.genderLabel')}</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!isEditing}>
+                        <Select onValueChange={field.onChange} value={field.value || ""} disabled={!isEditing}>
                         <FormControl>
                             <SelectTrigger><SelectValue placeholder={t('profileDialog.genderPlaceholder')} /></SelectTrigger>
                         </FormControl>

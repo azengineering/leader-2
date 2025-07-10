@@ -3,6 +3,7 @@
 
 import { supabase } from '@/lib/db';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { User } from './users';
 
 export type PollQuestionType = 'yes_no' | 'multiple_choice';
 
@@ -110,18 +111,117 @@ export async function getPollsForAdmin(): Promise<PollListItem[]> {
   }
 }
 
+async function getUserProfile(userId: string): Promise<User | null> {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error(`Error fetching profile for user ${userId}:`, error);
+    return null;
+  }
+  return data;
+}
+
 export async function getActivePollsForUser(userId: string | null): Promise<(PollListItem & { user_has_voted: boolean; description: string | null; })[]> {
   try {
-    const { data, error } = await supabase.rpc('get_active_polls_for_user', {
-      p_user_id: userId
-    });
+    const now = new Date().toISOString();
+    
+    // 1. Fetch all active polls
+    const { data: activePolls, error: pollsError } = await supabaseAdmin
+      .from('polls')
+      .select('*, poll_responses(count)')
+      .eq('is_active', true)
+      .or(`active_until.is.null,active_until.gte.${now}`);
 
-    if (error) {
-      console.error('Error fetching active polls for user:', error);
-      throw new Error(`Failed to fetch active polls: ${error.message}`);
+    if (pollsError) {
+      console.error('Error fetching active polls:', pollsError);
+      throw new Error(`Failed to fetch active polls: ${pollsError.message}`);
     }
 
-    return data || [];
+    // 2. Get user profile if logged in
+    const userProfile = userId ? await getUserProfile(userId) : null;
+
+    // 3. Get all of the user's votes to check which polls they've voted on
+    const userVotes = new Set();
+    if (userId) {
+      const { data: votes, error: votesError } = await supabase
+        .from('poll_responses')
+        .select('poll_id')
+        .eq('user_id', userId);
+      
+      if (votesError) {
+        console.error('Error fetching user votes:', votesError);
+        // Continue without vote info if this fails
+      } else {
+        votes.forEach(v => userVotes.add(v.poll_id));
+      }
+    }
+
+    // 4. Filter polls based on user profile
+    const filteredPolls = activePolls.filter(poll => {
+      const filters = poll.target_filters;
+
+      if (!filters || (
+        !filters.states?.length &&
+        !filters.constituencies?.length &&
+        !filters.gender?.length &&
+        filters.age_min === undefined &&
+        filters.age_max === undefined
+      )) {
+        return true; // No filters, show to everyone
+      }
+
+      if (!userProfile) {
+        return false; // Filters exist, but no user profile
+      }
+
+      let matches = true;
+
+      if (filters.states?.length) {
+        if (!userProfile.state || !filters.states.includes(userProfile.state)) {
+          matches = false;
+        }
+      }
+      if (matches && filters.constituencies?.length) {
+        const userConstituencies = [userProfile.mpConstituency, userProfile.mlaConstituency, userProfile.panchayat].filter(Boolean);
+        if (!filters.constituencies.some((fc: string) => userConstituencies.some(uc => uc?.toLowerCase() === fc.toLowerCase()))) {
+          matches = false;
+        }
+      }
+      if (matches && filters.gender?.length) {
+        if (!userProfile.gender || !filters.gender.map((g: string) => g.toLowerCase()).includes(userProfile.gender.toLowerCase())) {
+          matches = false;
+        }
+      }
+      if (matches && (filters.age_min !== undefined || filters.age_max !== undefined)) {
+        if (userProfile.age === undefined || userProfile.age === null) {
+          matches = false;
+        } else {
+          if (filters.age_min !== undefined && userProfile.age < filters.age_min) matches = false;
+          if (filters.age_max !== undefined && userProfile.age > filters.age_max) matches = false;
+        }
+      }
+      
+      return matches;
+    });
+
+    // 5. Format the final list
+    return filteredPolls.map(poll => ({
+      id: poll.id,
+      title: poll.title,
+      description: poll.description,
+      is_active: poll.is_active,
+      active_until: poll.active_until,
+      created_at: poll.created_at,
+      // @ts-ignore
+      response_count: poll.poll_responses[0]?.count || 0,
+      user_has_voted: userVotes.has(poll.id),
+      target_filters: poll.target_filters,
+    }));
+
   } catch (error) {
     console.error('Error in getActivePollsForUser:', error);
     throw new Error('Failed to fetch active polls');

@@ -3,6 +3,7 @@ import type {Metadata} from 'next';
 import { Toaster } from "@/components/ui/toaster"
 import { LanguageProvider } from '@/context/language-context';
 import { AuthProvider } from '@/context/auth-context';
+import IncompleteProfileDialog from '@/components/incomplete-profile-dialog';
 import ClientLayoutComponents from '@/components/client-layout-components';
 import './globals.css';
 
@@ -27,6 +28,7 @@ export default function RootLayout({
         <LanguageProvider>
           <AuthProvider>
             <ClientLayoutComponents />
+            <IncompleteProfileDialog />
             {children}
             <Toaster />
           </AuthProvider>

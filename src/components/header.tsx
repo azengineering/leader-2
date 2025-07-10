@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import ProfileDialog from '@/components/profile-dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useLanguage, type Language } from '@/context/language-context';
@@ -38,6 +39,7 @@ export default function Header() {
   const router = useRouter();
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [isProfileDialogOpen, setProfileDialogOpen] = useState(false);
 
 
   const navLinks = [
@@ -93,7 +95,7 @@ export default function Header() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => router.push('/my-activities?tab=profile')}>
+          <DropdownMenuItem onSelect={() => setProfileDialogOpen(true)}>
              <UserCog className="mr-2 h-4 w-4" />
              <span>{t('header.myProfile')}</span>
           </DropdownMenuItem>
@@ -155,7 +157,7 @@ export default function Header() {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="space-y-1 bg-secondary/30 pb-4">
                         <SheetClose asChild>
-                            <button onClick={() => router.push('/my-activities?tab=profile')} className="flex w-full items-center gap-2 py-2 px-4 pl-12 text-left text-base font-medium hover:text-primary transition-colors hover:bg-secondary">
+                            <button onClick={() => setProfileDialogOpen(true)} className="flex w-full items-center gap-2 py-2 px-4 pl-12 text-left text-base font-medium hover:text-primary transition-colors hover:bg-secondary">
                                 <UserCog className="h-4 w-4" />
                                 <span>{t('header.myProfile')}</span>
                             </button>
@@ -284,6 +286,8 @@ export default function Header() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {user && <ProfileDialog open={isProfileDialogOpen} onOpenChange={setProfileDialogOpen} />}
     </>
   );
 }

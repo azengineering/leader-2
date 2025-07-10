@@ -176,7 +176,8 @@ const translations = {
         noAddedLeadersTitle: 'You have not added any leaders.',
         noAddedLeadersDescription: 'Help expand our database by adding leaders from your constituencies.',
         profileTabTitle: 'Your Profile Information',
-        profileTabDescription: 'View and manage your personal details and location settings.'
+        profileTabDescription: 'View and manage your personal details and location settings.',
+        editProfileButton: 'Edit Profile'
     },
     accountSettingsPage: {
       title: 'Account Settings',
@@ -291,18 +292,6 @@ const translations = {
       submitButton: "Submit Rating & Comment",
       submittingButton: "Submitting...",
     },
-    reviewsDialog: {
-      title: "Reviews",
-      description: "See what other citizens are saying.",
-      noReviews: "No reviews yet. Be the first to add a review!",
-      reviews: "Reviews",
-      anonymous: "Anonymous",
-      addYourReview: "Add Your Review",
-      latest: "Latest",
-      oldest: "Oldest",
-      topRated: "Top Rated",
-      lowestRated: "Lowest Rated"
-    },
     pagination: {
       previous: 'Previous',
       next: 'Next',
@@ -325,6 +314,12 @@ const translations = {
         infoTitle: 'Contact Information',
         noteTitle: 'Please Note',
         noteDescription: 'This form is for site support and inquiries only. To provide feedback on a political leader, please find and rate them on their profile page.',
+    },
+    incompleteProfileDialog: {
+      title: 'Your profile is incomplete.',
+      description: 'Please complete your profile to add ratings and comments.',
+      subDescription: 'This is required for a better and smoother experience.',
+      editProfileButton: 'Edit Profile',
     },
   },
   hi: {
@@ -503,7 +498,8 @@ const translations = {
         noAddedLeadersTitle: 'आपने कोई नेता नहीं जोड़ा है।',
         noAddedLeadersDescription: 'अपने निर्वाचन क्षेत्रों से नेताओं को जोड़कर हमारे डेटाबेस का विस्तार करने में मदद करें।',
         profileTabTitle: 'आपकी प्रोफ़ाइल जानकारी',
-        profileTabDescription: 'अपने व्यक्तिगत विवरण और स्थान सेटिंग्स देखें और प्रबंधित करें।'
+        profileTabDescription: 'अपने व्यक्तिगत विवरण और स्थान सेटिंग्स देखें और प्रबंधित करें।',
+        editProfileButton: 'प्रोफ़ाइल संपादित करें'
     },
     accountSettingsPage: {
       title: 'अकाउंट सेटिंग',
@@ -652,6 +648,12 @@ const translations = {
         infoTitle: 'संपर्क जानकारी',
         noteTitle: 'कृपया ध्यान दें',
         noteDescription: 'यह फ़ॉर्म केवल साइट समर्थन और पूछताछ के लिए है। किसी राजनीतिक नेता पर प्रतिक्रिया देने के लिए, कृपया उनकी प्रोफ़ाइल पृष्ठ पर उन्हें खोजें और रेट करें।',
+    },
+    incompleteProfileDialog: {
+      title: 'आपकी प्रोफ़ाइल अधूरी है।',
+      description: 'रेटिंग और टिप्पणियां जोड़ने के लिए कृपया अपनी प्रोफ़ाइल पूरी करें।',
+      subDescription: 'यह बेहतर और सहज अनुभव के लिए आवश्यक है।',
+      editProfileButton: 'प्रोफ़ाइल संपादित करें',
     },
   },
 };

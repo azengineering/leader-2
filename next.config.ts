@@ -25,6 +25,14 @@ const nextConfig: NextConfig = {
   },
   // Attempt to disable Next.js build cache entirely
   // cacheHandler: false, // Comment out or remove this line
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);
