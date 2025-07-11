@@ -237,6 +237,7 @@ const translations = {
       requiredTitle: "Login Required",
       requiredDescription: "You need to be logged in to add a new leader. Please log in to continue.",
       rateLoginRequired: "You must be logged in to rate a leader.",
+      loginToReview: "You must be logged in to add a review.",
       activitiesLoginRequired: "You need to be logged in to access your activities page. Please log in to continue.",
       cancel: "Cancel",
       login: "Login"
@@ -291,6 +292,18 @@ const translations = {
       cancelButton: "Cancel",
       submitButton: "Submit Rating & Comment",
       submittingButton: "Submitting...",
+    },
+    reviewsDialog: {
+      title: "Reviews",
+      description: "See what other citizens are saying.",
+      noReviews: "No reviews yet. Be the first to add a review!",
+      reviews: "Reviews",
+      anonymous: "Anonymous",
+      addYourReview: "Add Your Review",
+      latest: "Latest",
+      oldest: "Oldest",
+      topRated: "Top Rated",
+      lowestRated: "Lowest Rated"
     },
     pagination: {
       previous: 'Previous',
@@ -559,6 +572,7 @@ const translations = {
       requiredTitle: "लॉगिन आवश्यक है",
       requiredDescription: "एक नया नेता जोड़ने के लिए आपको लॉग इन होना चाहिए। कृपया जारी रखने के लिए लॉग इन करें।",
       rateLoginRequired: "किसी नेता को रेट करने के लिए आपको लॉग इन होना चाहिए।",
+      loginToReview: "समीक्षा जोड़ने के लिए आपको लॉग इन होना चाहिए।",
       activitiesLoginRequired: "अपनी गतिविधियों का पृष्ठ देखने के लिए आपको लॉग इन होना चाहिए। कृपया जारी रखने के लिए लॉग इन करें।",
       cancel: "रद्द करें",
       login: "लॉग इन करें"

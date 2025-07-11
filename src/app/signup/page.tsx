@@ -85,11 +85,19 @@ export default function SignupPage() {
       await signup(values.email, values.password);
       // The signup function will handle redirection to login page with a toast
     } catch (error) {
-      toast({
-        title: "Signup Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof Error && error.message.includes('An account with this email already exists.')) {
+        toast({
+          title: "Account Already Exists",
+          description: "An account with this email already exists. Please use the 'Forgot Password' link to reset your password.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -101,11 +109,6 @@ export default function SignupPage() {
     setIsGoogleLoading(true);
     try {
       await signInWithGoogle();
-      
-      toast({
-        title: "Welcome to PolitiRate!",
-        description: "Your account has been created successfully.",
-      });
     } catch (error) {
       toast({
         title: "Google Sign-Up Failed",

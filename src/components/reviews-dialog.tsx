@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Star, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 import {
   Dialog,
@@ -22,6 +23,17 @@ import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/context/auth-context';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const LinkRenderer = ({ text }: { text: string | null }) => {
   if (!text) return null;
@@ -118,6 +130,9 @@ export default function ReviewsDialog({ leader, open, onOpenChange, onAddReview 
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useLanguage();
   const [sortOrder, setSortOrder] = useState<SortOrder>('latest');
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const [showLoginRequiredDialog, setShowLoginRequiredDialog] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -202,11 +217,34 @@ export default function ReviewsDialog({ leader, open, onOpenChange, onAddReview 
             </ScrollArea>
         </TooltipProvider>
         <DialogFooter>
-            <Button onClick={onAddReview}>
+            <Button onClick={() => {
+                if (!isAuthenticated) {
+                    setShowLoginRequiredDialog(true);
+                } else {
+                    onAddReview();
+                }
+            }}>
                 {t('reviewsDialog.addYourReview')}
             </Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={showLoginRequiredDialog} onOpenChange={setShowLoginRequiredDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('auth.requiredTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('auth.loginToReview')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('auth.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push('/login?redirect=/')}>
+              {t('auth.login')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

@@ -1,8 +1,8 @@
-
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/data/users';
 import { findUserById, updateUserProfile } from '@/data/users';
 import { supabase } from '@/lib/db';
@@ -13,6 +13,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
+  showProfileCompletionDialog: boolean;
+  setShowProfileCompletionDialog: (show: boolean) => void;
   login: (email: string, password: string, redirectPath?: string | null) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -25,13 +27,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showProfileCompletionDialog, setShowProfileCompletionDialog] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
-  const handleRedirect = (userProfile: User, redirectPath?: string | null) => {
+  const handleRedirect = (userProfile: User, redirectPath?: string | null, isLoginEvent: boolean = false) => {
     const isProfileComplete = userProfile.name && userProfile.state && userProfile.gender && userProfile.age;
 
-    if (!isProfileComplete) {
-      router.push('/account-settings?incomplete=true');
+    if (!isProfileComplete && isLoginEvent) {
+      setShowProfileCompletionDialog(true);
+      router.push('/');
     } else if (redirectPath) {
       router.push(redirectPath);
     } else {
@@ -42,6 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (window.location.pathname === '/update-password') {
+          setLoading(false);
+          return;
+        }
         if (event === 'SIGNED_IN' && session?.user) {
           if (user) {
             setLoading(false);
@@ -53,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!userProfile) {
             const { error: rpcError } = await supabase.rpc('ensure_user_profile_exists');
             if (rpcError) {
-              console.error("Auth state change: Error ensuring profile exists", rpcError);
+              console.error("Auth state change: Error ensuring profile exists", JSON.stringify(rpcError, null, 2));
               await supabase.auth.signOut();
               setUser(null);
               setLoading(false);
@@ -64,8 +73,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (userProfile && !userProfile.isBlocked) {
             setUser(userProfile);
-            const redirectPath = new URL(window.location.href).searchParams.get('redirect');
-            handleRedirect(userProfile, redirectPath);
+            const url = new URL(window.location.href);
+            const redirectPath = url.searchParams.get('redirect');
+            if (url.searchParams.get('googleSignIn')) {
+              toast({
+                title: "Welcome!",
+                description: "You have successfully signed in with Google.",
+              });
+              url.searchParams.delete('googleSignIn');
+              window.history.replaceState({}, '', url);
+              handleRedirect(userProfile, redirectPath, true);
+            }
           } else {
             await supabase.auth.signOut();
             setUser(null);
@@ -73,9 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          setShowProfileCompletionDialog(false);
+          router.push('/');
           setLoading(false);
         } else if (!session?.user) {
           setUser(null);
+          setShowProfileCompletionDialog(false);
           setLoading(false);
         }
       }
@@ -104,7 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (rpcError) {
           await supabase.auth.signOut();
-          console.error("Error ensuring user profile exists:", rpcError);
+          console.error("Error ensuring user profile exists:", JSON.stringify(rpcError, null, 2));
           throw new Error("Login successful, but your profile could not be created. Please contact support.");
         }
         
@@ -124,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (userProfile) {
         setUser(userProfile); // Set state BEFORE redirecting
-        handleRedirect(userProfile, redirectPath);
+        handleRedirect(userProfile, redirectPath, true);
       } else {
         await supabase.auth.signOut();
         throw new Error("Login successful, but your profile could not be found or created. Please contact support.");
@@ -158,10 +179,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async (redirectPath?: string | null) => {
     // Google Sign-In is a redirect flow. It doesn't return a user directly.
     // The onAuthStateChange listener will pick up the session after the redirect.
+    const redirectTo = new URL(window.location.origin + (redirectPath || '/'));
+    redirectTo.searchParams.set('googleSignIn', 'true');
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + (redirectPath || '/'),
+        redirectTo: redirectTo.toString(),
       },
     });
      if (error) {
@@ -172,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setShowProfileCompletionDialog(false);
     router.push('/');
   };
 
@@ -185,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return updatedUser;
   };
 
-  const value = { user, loading, isAuthenticated: !!user, login, signup, logout, updateUser, signInWithGoogle };
+  const value = { user, loading, isAuthenticated: !!user, login, signup, logout, updateUser, signInWithGoogle, showProfileCompletionDialog, setShowProfileCompletionDialog };
 
   return (
     <AuthContext.Provider value={value}>

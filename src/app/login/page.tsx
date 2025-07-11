@@ -143,11 +143,6 @@ function LoginContent() {
     try {
       const redirectPath = searchParams.get('redirect');
       await signInWithGoogle(redirectPath);
-      
-      toast({
-        title: "Welcome!",
-        description: "You have successfully signed in with Google.",
-      });
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('BLOCKED::')) {
         const [_, reason, until] = error.message.split('::');
@@ -300,7 +295,7 @@ function LoginContent() {
                   />
                   <div className="flex items-center justify-end">
                     <Link href="/forgot-password" passHref>
-                      <Button variant="link" className="px-0 text-sm text-muted-foreground hover:text-primary">
+                      <Button type="button" variant="link" className="px-0 text-sm text-muted-foreground hover:text-primary">
                         Forgot Password?
                       </Button>
                     </Link>

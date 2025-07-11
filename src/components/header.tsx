@@ -105,12 +105,6 @@ export default function Header() {
               <span>{t('header.myActivities')}</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-              <Link href="/account-settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>{t('header.accountSettings')}</span>
-              </Link>
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); logout(); }}>
             <LogOut className="mr-2 h-4 w-4" />
@@ -161,12 +155,6 @@ export default function Header() {
                                 <UserCog className="h-4 w-4" />
                                 <span>{t('header.myProfile')}</span>
                             </button>
-                        </SheetClose>
-                        <SheetClose asChild>
-                            <Link href="/account-settings" className="flex w-full items-center gap-2 py-2 px-4 pl-12 text-base font-medium hover:text-primary transition-colors hover:bg-secondary">
-                               <Settings className="h-4 w-4" />
-                               <span>{t('header.accountSettings')}</span>
-                            </Link>
                         </SheetClose>
                   </CollapsibleContent>
                 </Collapsible>

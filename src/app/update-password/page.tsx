@@ -114,7 +114,7 @@ function UpdatePasswordContent() {
             variant="ghost" 
             size="icon" 
             className="absolute top-4 right-4 text-muted-foreground hover:text-foreground" 
-            onClick={() => router.back()}
+            onClick={() => router.push('/')}
           >
             <X className="h-5 w-5" />
             <span className="sr-only">Close</span>

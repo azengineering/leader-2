@@ -45,6 +45,7 @@ function ForgotPasswordContent() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
   const supabase = createClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -59,6 +60,23 @@ function ForgotPasswordContent() {
     
     setIsLoading(true);
     try {
+      // First, check if the user exists
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', values.email)
+        .single();
+
+      if (userError || !user) {
+        toast({
+          title: "Account not found",
+          description: "No account exists with this email. Please sign up first.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo: `${window.location.origin}/update-password`,
       });
@@ -67,6 +85,7 @@ function ForgotPasswordContent() {
         throw error;
       }
 
+      setSubmittedEmail(values.email);
       setIsSuccess(true);
       toast({
         title: "Check your email",
@@ -114,7 +133,7 @@ function ForgotPasswordContent() {
           <CardContent className="px-8 space-y-6">
             {isSuccess ? (
               <div className="text-center p-4 bg-green-100 text-green-800 rounded-md">
-                <p>A password reset link has been sent to your email. Please check your inbox and follow the instructions.</p>
+                <p>A password reset link has been sent to <strong>{submittedEmail}</strong>. Please check your inbox and follow the instructions.</p>
               </div>
             ) : (
               <Form {...form}>
@@ -137,20 +156,22 @@ function ForgotPasswordContent() {
                       </FormItem>
                     )}
                   />
-                  <Button 
-                    type="submit" 
-                    className="w-full py-6 text-lg"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      'Send Reset Link'
-                    )}
-                  </Button>
+                  <div className="flex justify-center">
+                    <Button 
+                      type="submit" 
+                      className="py-6 text-lg"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Send Reset Link'
+                      )}
+                    </Button>
+                  </div>
                 </form>
               </Form>
             )}

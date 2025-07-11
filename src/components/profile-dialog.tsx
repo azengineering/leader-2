@@ -47,14 +47,15 @@ const profileSchema = z.object({
 interface ProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onProfileUpdateSuccess?: () => void; // Added optional prop
+  onProfileUpdateSuccess?: () => void;
+  isCompletingProfile?: boolean;
 }
 
-export default function ProfileDialog({ open, onOpenChange, onProfileUpdateSuccess }: ProfileDialogProps) {
+export default function ProfileDialog({ open, onOpenChange, onProfileUpdateSuccess, isCompletingProfile = false }: ProfileDialogProps) {
   const { t } = useLanguage();
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(isCompletingProfile);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -85,7 +86,10 @@ export default function ProfileDialog({ open, onOpenChange, onProfileUpdateSucce
 
   useEffect(() => {
     resetFormValues();
-  }, [user, open]);
+    if (isCompletingProfile) {
+      setIsEditing(true);
+    }
+  }, [user, open, isCompletingProfile]);
   
   const handleReset = () => {
     resetFormValues();
@@ -248,7 +252,13 @@ export default function ProfileDialog({ open, onOpenChange, onProfileUpdateSucce
              <DialogFooter className="pt-4">
                 {isEditing ? (
                   <div className="flex gap-2">
-                    <Button type="button" variant="ghost" onClick={() => setIsEditing(false)}>
+                    <Button type="button" variant="ghost" onClick={() => {
+                      if (isCompletingProfile) {
+                        onOpenChange(false);
+                      } else {
+                        setIsEditing(false);
+                      }
+                    }}>
                       {t('auth.cancel')}
                     </Button>
                     <Button type="button" variant="outline" onClick={handleReset}>
