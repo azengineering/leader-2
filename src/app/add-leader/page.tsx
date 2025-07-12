@@ -23,7 +23,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { useLanguage } from '@/context/language-context';
 import { useToast } from "@/hooks/use-toast";
-import { addLeader, getLeaderById, updateLeader, type Leader, getLeaders } from '@/data/leaders';
+import { addLeader, getLeaderById, updateLeader, type Leader, getLeaders, LeaderFormData } from '@/data/leaders';
 import { indianStates } from '@/data/locations';
 import { useAuth } from "@/context/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -246,40 +246,7 @@ const AddLeaderPageContent = () => {
         return;
     }
 
-    const fileToDataUri = (file: File) => new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            if (event.target?.result) {
-                resolve(event.target.result as string);
-            } else {
-                reject(new Error("Failed to read file."));
-            }
-        };
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-    });
-
-    let photoDataUrl = currentLeader?.photoUrl || '';
-    if (values.photoUrl && values.photoUrl.length > 0) {
-        try {
-            photoDataUrl = await fileToDataUri(values.photoUrl[0]);
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error uploading photo.' });
-            return;
-        }
-    }
-
-    let manifestoDataUrl = currentLeader?.manifestoUrl || '';
-    if (values.manifestoUrl && values.manifestoUrl.length > 0) {
-        try {
-            manifestoDataUrl = await fileToDataUri(values.manifestoUrl[0]);
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Error uploading manifesto.' });
-            return;
-        }
-    }
-    
-    const leaderPayload = {
+    const leaderPayload: LeaderFormData = {
         name: values.name,
         partyName: values.partyName,
         constituency: values.constituency,
@@ -292,8 +259,8 @@ const AddLeaderPageContent = () => {
             district: values.district,
         },
         previousElections: values.previousElections || [],
-        photoUrl: photoDataUrl,
-        manifestoUrl: manifestoDataUrl,
+        photoFile: values.photoUrl?.[0],
+        manifestoFile: values.manifestoUrl?.[0],
         twitterUrl: values.twitterUrl,
     };
 

@@ -25,10 +25,10 @@ export default function Home() {
 
     fetchLeaders();
     
-    if (localStorage.getItem('hasVisitedPolitiRate')) {
+    if (sessionStorage.getItem('hasVisitedPolitiRate')) {
       setIsLoading(false);
     } else {
-      localStorage.setItem('hasVisitedPolitiRate', 'true');
+      sessionStorage.setItem('hasVisitedPolitiRate', 'true');
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 3000);

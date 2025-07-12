@@ -19,7 +19,13 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'placehold.co',
         port: '',
-        pathname: '/**', 
+        pathname: '/**',
+      },
+      {
+        protocol: 'https', // The protocol used (https for Supabase)
+        hostname: 'ybtwqxrfrlnbwedajmtz.supabase.co', // Your Supabase Storage hostname
+        port: '', // Leave empty unless you have a custom port
+        pathname: '/storage/v1/object/public/**', // This is crucial for Supabase Storage
       },
     ],
   },

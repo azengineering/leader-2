@@ -501,44 +501,7 @@ function AdminUsersContent() {
       if (!leaderToEdit || !selectedUser) return;
       startTransition(async () => {
         try {
-          const fileToDataUri = (file: File) => new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                if (event.target?.result) {
-                    resolve(event.target.result as string);
-                } else {
-                    reject(new Error("Failed to read file."));
-                }
-            };
-            reader.onerror = (error) => reject(error);
-            reader.readAsDataURL(file);
-          });
-    
-          let photoDataUrl = leaderToEdit.photoUrl;
-          if (photoRemoved) {
-            photoDataUrl = '';
-          } else if (values.photoUrl && values.photoUrl.length > 0) {
-              try {
-                  photoDataUrl = await fileToDataUri(values.photoUrl[0]);
-              } catch (error) {
-                  toast({ variant: 'destructive', title: 'Error uploading photo.' });
-                  return;
-              }
-          }
-    
-          let manifestoDataUrl = leaderToEdit.manifestoUrl;
-          if (manifestoRemoved) {
-            manifestoDataUrl = '';
-          } else if (values.manifestoUrl && values.manifestoUrl.length > 0) {
-              try {
-                  manifestoDataUrl = await fileToDataUri(values.manifestoUrl[0]);
-              } catch (error) {
-                  toast({ variant: 'destructive', title: 'Error uploading manifesto.' });
-                  return;
-              }
-          }
-
-          const leaderPayload = {
+          const leaderPayload: Partial<LeaderFormData> & { name: string; partyName: string; constituency: string; electionType: any; gender: any; age: number; nativeAddress: string; } = {
             name: values.name,
             partyName: values.partyName,
             constituency: values.constituency,
@@ -552,9 +515,19 @@ function AdminUsersContent() {
             },
             previousElections: values.previousElections || [],
             twitterUrl: values.twitterUrl,
-            photoUrl: photoDataUrl,
-            manifestoUrl: manifestoDataUrl,
           };
+
+          if (photoRemoved) {
+            leaderPayload.photoUrl = '';
+          } else if (values.photoUrl && values.photoUrl.length > 0) {
+            leaderPayload.photoFile = values.photoUrl[0];
+          }
+
+          if (manifestoRemoved) {
+            leaderPayload.manifestoUrl = '';
+          } else if (values.manifestoUrl && values.manifestoUrl.length > 0) {
+            leaderPayload.manifestoFile = values.manifestoUrl[0];
+          }
           
           await updateLeader(leaderToEdit.id, leaderPayload, selectedUser.id, true);
           toast({ title: "Leader Updated Successfully" });

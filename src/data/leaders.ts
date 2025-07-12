@@ -2,8 +2,9 @@
 
 import { supabase } from '@/lib/db';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { uploadLeaderPhoto, uploadLeaderManifesto, deleteStorageFile } from '@/lib/supabase/storage';
 
-// Interfaces remain the same as they define the shape of the data for the app
+// The Leader interface now expects Files for photo and manifesto during creation/update
 export interface Leader {
   id: string;
   name: string;
@@ -35,6 +36,14 @@ export interface Leader {
   status: 'pending' | 'approved' | 'rejected';
   adminComment?: string | null;
   userName?: string;
+}
+
+// This interface is used for the form data, accepting File objects
+export interface LeaderFormData extends Omit<Leader, 'id' | 'rating' | 'reviewCount' | 'createdAt' | 'status' | 'adminComment' | 'userName' | 'photoUrl' | 'manifestoUrl'> {
+  photoFile?: File | null;
+  manifestoFile?: File | null;
+  photoUrl?: string;
+  manifestoUrl?: string;
 }
 
 export interface Review {
@@ -86,15 +95,32 @@ export async function getLeaders(): Promise<Leader[]> {
   }));
 }
 
-export async function addLeader(leaderData: Omit<Leader, 'id' | 'rating' | 'reviewCount' | 'createdAt' | 'status' | 'adminComment' | 'userName'>, userId: string | null): Promise<void> {
+export async function addLeader(leaderData: LeaderFormData, userId: string | null): Promise<void> {
+    let photoUrl = '';
+    if (leaderData.photoFile) {
+        photoUrl = await uploadLeaderPhoto(leaderData.photoFile);
+    }
+
+    let manifestoUrl = '';
+    if (leaderData.manifestoFile) {
+        manifestoUrl = await uploadLeaderManifesto(leaderData.manifestoFile);
+    }
+
+    const { photoFile, manifestoFile, ...restOfLeaderData } = leaderData;
+
     const { error } = await supabase.from('leaders').insert({
-        ...leaderData,
+        ...restOfLeaderData,
+        photoUrl,
+        manifestoUrl,
         addedByUserId: userId,
         status: 'pending'
     });
 
     if (error) {
         console.error("Error adding leader:", error);
+        // If the database insert fails, we should delete the files that were just uploaded
+        await deleteStorageFile(supabase, photoUrl, 'leader-photos');
+        await deleteStorageFile(supabase, manifestoUrl, 'leader-manifestos');
         throw error;
     }
 }
@@ -116,7 +142,7 @@ export async function getLeaderById(id: string): Promise<Leader | null> {
     };
 }
 
-export async function updateLeader(leaderId: string, leaderData: Partial<Omit<Leader, 'id' | 'rating' | 'reviewCount' | 'createdAt' | 'status' | 'adminComment'>>, userId: string | null, isAdmin: boolean): Promise<Leader | null> {
+export async function updateLeader(leaderId: string, leaderData: LeaderFormData, userId: string | null, isAdmin: boolean): Promise<Leader | null> {
     const db = isAdmin ? supabaseAdmin : supabase;
 
     const leaderToUpdate = await getLeaderById(leaderId);
@@ -126,7 +152,29 @@ export async function updateLeader(leaderId: string, leaderData: Partial<Omit<Le
         throw new Error("You are not authorized to edit this leader.");
     }
 
-    const payload: Partial<Leader> = { ...leaderData };
+    const { photoFile, manifestoFile, ...restOfLeaderData } = leaderData;
+    const payload: Partial<Leader> = { ...restOfLeaderData };
+
+    // Handle photo update/removal
+    if (photoFile) {
+        // New file uploaded, will replace the old one
+        payload.photoUrl = await uploadLeaderPhoto(photoFile, leaderToUpdate.photoUrl);
+    } else if (leaderData.photoUrl === '') {
+        // Photo explicitly removed
+        await deleteStorageFile(db, leaderToUpdate.photoUrl, 'leader-photos');
+        payload.photoUrl = '';
+    }
+
+    // Handle manifesto update/removal
+    if (manifestoFile) {
+        // New file uploaded, will replace the old one
+        payload.manifestoUrl = await uploadLeaderManifesto(manifestoFile, leaderToUpdate.manifestoUrl);
+    } else if (leaderData.manifestoUrl === '') {
+        // Manifesto explicitly removed
+        await deleteStorageFile(db, leaderToUpdate.manifestoUrl, 'leader-manifestos');
+        payload.manifestoUrl = '';
+    }
+
     if (!isAdmin) {
         payload.status = 'pending';
         payload.adminComment = 'User updated details. Pending re-approval.';
@@ -141,6 +189,9 @@ export async function updateLeader(leaderId: string, leaderData: Partial<Omit<Le
 
     if (error) {
         console.error("Error updating leader:", error);
+        // Note: We are not deleting the newly uploaded files here on purpose.
+        // The update failed, but the user might want to retry without re-uploading.
+        // A cleanup job could handle orphaned files later if needed.
         throw error;
     }
     return data;
@@ -372,13 +423,27 @@ export async function updateLeaderStatus(leaderId: string, status: 'pending' | '
 }
 
 export async function deleteLeader(leaderId: string): Promise<void> {
+    // First, get the leader's data to find their file URLs
+    const leaderToDelete = await getLeaderById(leaderId);
+    if (!leaderToDelete) {
+        console.error("Attempted to delete a leader that does not exist:", leaderId);
+        // If leader doesn't exist, there's nothing to do.
+        return;
+    }
+
+    // Now, delete the files from storage using supabaseAdmin to bypass RLS
+    await deleteStorageFile(supabaseAdmin, leaderToDelete.photoUrl, 'leader-photos');
+    await deleteStorageFile(supabaseAdmin, leaderToDelete.manifestoUrl, 'leader-manifestos');
+
+    // Finally, delete the leader record from the database
     const { error } = await supabaseAdmin
         .from('leaders')
         .delete()
         .eq('id', leaderId);
 
     if (error) {
-        console.error("Error deleting leader:", error);
+        console.error("Error deleting leader from database:", error);
+        // Even if DB deletion fails, we don't re-upload the files. The inconsistency will need to be handled manually.
         throw error;
     }
 }
