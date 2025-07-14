@@ -18,8 +18,8 @@ export default function Home() {
 
   useEffect(() => {
     const fetchLeaders = async () => {
-      const allLeaders = await getLeaders();
-      const sortedLeaders = [...allLeaders].sort((a, b) => b.rating - a.rating).slice(0, 4);
+      const allLeaders = await getLeaders(20);
+      const sortedLeaders = [...allLeaders].sort((a, b) => b.rating - a.rating);
       setTopRatedLeaders(sortedLeaders);
     };
 

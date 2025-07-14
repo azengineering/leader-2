@@ -18,11 +18,11 @@ export default function FeaturedLeaders({ leaders }: FeaturedLeadersProps) {
   if (!leaders.length) return null;
 
   return (
-    <section className="py-8 md:py-12 bg-secondary/50">
+    <section className="mt-[-2rem] pb-4 md:pb-6 bg-secondary/50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="font-headline text-3xl md:text-4xl font-extrabold">{t('featuredLeaders.heading')}</h2>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+        <div className="mb-8">
+          <h2 className="font-headline text-xl md:text-2xl font-extrabold">{t('featuredLeaders.heading')}</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             {t('featuredLeaders.subheading')}
           </p>
         </div>

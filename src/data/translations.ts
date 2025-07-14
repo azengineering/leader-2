@@ -102,12 +102,15 @@ const translations = {
       },
       searchButton: 'Search',
       resetButton: 'Reset',
+      constituencyRequiredError: 'Constituency name is required for the selected election type.',
     },
     leaderList: {
       noLeaders: 'No Leaders Found',
       noLeadersDesc: 'Try adjusting your filters to find political leaders.',
-      resultsTitle: 'Matching Leaders',
+      resultsTitle: 'Existing leaders',
       addLeaderPrompt: "Can't find who you're looking for? Add them to our database.",
+      noResultsFound: 'No Results Found',
+      noResultsFoundDescription: 'Your manual filter returned no leaders. Please try adjusting your search criteria or reset the filters.',
     },
     leaderCard: {
       reviews: 'reviews',
@@ -230,7 +233,7 @@ const translations = {
       addMoreButton: 'Add More',
       addRecordsButton: 'Add Records',
       removeButton: 'Remove',
-      leadersInYourAreaTitle: 'Leaders in Your Area',
+      leadersInYourAreaTitle: 'Existing leaders in your area',
       leadersInYourAreaDescription: 'Check if the leader already exists before adding a new one.',
     },
     auth: {
@@ -437,12 +440,15 @@ const translations = {
       },
       searchButton: 'खोजें',
       resetButton: 'रीसेट',
+      constituencyRequiredError: 'चयनित चुनाव प्रकार के लिए निर्वाचन क्षेत्र का नाम आवश्यक है।',
     },
     leaderList: {
       noLeaders: 'कोई नेता नहीं मिला',
       noLeadersDesc: 'राजनीतिक नेताओं को खोजने के लिए अपने फ़िल्टर समायोजित करने का प्रयास करें।',
       resultsTitle: 'मिलते-जुलते नेता',
       addLeaderPrompt: "जिसे आप ढूंढ रहे हैं वह नहीं मिल रहा है? उन्हें हमारे डेटाबेस में जोड़ें।",
+      noResultsFound: 'कोई परिणाम नहीं मिला',
+      noResultsFoundDescription: 'आपके मैन्युअल फ़िल्टर ने कोई नेता नहीं लौटाया। कृपया अपनी खोज मानदंड समायोजित करने का प्रयास करें या फ़िल्टर रीसेट करें।',
     },
     leaderCard: {
       reviews: 'समीक्षाएं',

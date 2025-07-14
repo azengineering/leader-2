@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -13,6 +12,7 @@ import SearchFilter from '@/components/search-filter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
+import FeaturedLeaders from '@/components/featured-leaders';
 import { PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   AlertDialog,
@@ -39,10 +39,12 @@ function RateLeaderContent() {
   const { t } = useLanguage();
   const [allLeaders, setAllLeaders] = useState<Leader[]>([]);
   const [filteredLeaders, setFilteredLeaders] = useState<Leader[]>([]);
+  const [topRatedLeaders, setTopRatedLeaders] = useState<Leader[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const leadersPerPage = 10;
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false); // New state to track initial load
+  const [manualFilterActive, setManualFilterActive] = useState(false); // New state to track manual filter
   
   const { user } = useAuth();
   const router = useRouter();
@@ -65,7 +67,8 @@ function RateLeaderContent() {
   }, [searchParams, isLoading]);
 
   useEffect(() => {
-    if (hasLoadedInitialData) { // Only run filtering if data has been loaded
+    // Only run initial/user-based filtering if data has been loaded AND no manual filter is active
+    if (hasLoadedInitialData && !manualFilterActive) { 
       const candidateNameFromQuery = searchParams.get('candidateName');
       let leadersToShow = allLeaders;
 
@@ -110,13 +113,23 @@ function RateLeaderContent() {
         
         if (uniqueLeaders.length > 0) {
             leadersToShow = uniqueLeaders;
+        } else {
+            leadersToShow = [];
         }
-      } 
+      }
       
-      setFilteredLeaders(leadersToShow);
+      // Sort leaders by election type
+      const electionTypeOrder = { national: 1, state: 2, panchayat: 3 };
+      const sortedByElection = leadersToShow.sort((a, b) => {
+        const orderA = electionTypeOrder[a.electionType] || 4;
+        const orderB = electionTypeOrder[b.electionType] || 4;
+        return orderA - orderB;
+      });
+
+      setFilteredLeaders(sortedByElection);
       setCurrentPage(1);
     }
-  }, [user, searchParams, allLeaders, hasLoadedInitialData]); // Depend on allLeaders and hasLoadedInitialData
+  }, [user, searchParams, hasLoadedInitialData, manualFilterActive]); // Removed allLeaders from dependencies
 
   // New useEffect for initial data fetching
   useEffect(() => {
@@ -126,6 +139,9 @@ function RateLeaderContent() {
         const leadersFromStorage = await getLeaders();
         setAllLeaders(leadersFromStorage);
         setFilteredLeaders(leadersFromStorage); // Initially show all leaders
+        const topLeaders = await getLeaders(20);
+        const sortedTopLeaders = [...topLeaders].sort((a, b) => b.rating - a.rating);
+        setTopRatedLeaders(sortedTopLeaders);
         setIsLoading(false);
         setHasLoadedInitialData(true); // Mark data as loaded
       };
@@ -144,6 +160,10 @@ function RateLeaderContent() {
   const handleSearch = async (filters: { electionType: ElectionType; searchTerm: string; candidateName: string; }) => {
     setIsLoading(true);
     const { electionType, searchTerm, candidateName } = filters;
+
+    // Determine if a manual filter is active
+    const isManualFilterApplied = electionType !== '' || searchTerm !== '' || candidateName !== '';
+    setManualFilterActive(isManualFilterApplied);
 
     // Always fetch fresh data on search
     const currentLeaders = await getLeaders();
@@ -219,18 +239,50 @@ function RateLeaderContent() {
         <SearchFilter onSearch={handleSearch} />
         
         <div className="mt-12">
-          {filteredLeaders.length > 0 && !isLoading && (
+          {user && filteredLeaders.length > 0 && !isLoading && (
             <>
-              <h2 className="text-2xl font-bold font-headline mb-4">
+              <h2 className="text-xl font-bold font-headline mb-4">
                 {t('leaderList.resultsTitle')}
               </h2>
               <Separator className="mb-8" />
             </>
           )}
-          {isLoading ? <LeaderListSkeleton /> : <LeaderList leaders={currentLeaders} />}
+          {isLoading ? (
+            <LeaderListSkeleton />
+          ) : manualFilterActive && filteredLeaders.length === 0 ? (
+            <div className="text-center py-8 px-4 rounded-lg bg-secondary border-2 border-dashed border-border mt-4">
+              <h3 className="mt-4 text-xl font-semibold font-headline text-blue-700">
+                {t('leaderList.noResultsFound')}
+              </h3>
+              <p className="mt-2 text-muted-foreground max-w-md mx-auto">
+                {t('leaderList.noResultsFoundDescription')}
+              </p>
+              <div className="flex justify-center">
+                <p className="mt-4 text-sm bg-blue-700 text-white py-2 px-4 rounded-lg">
+                  {t('leaderList.addLeaderPrompt')}
+                </p>
+              </div>
+              <Button onClick={handleAddLeaderClick} className="mt-4">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                {t('hero.addNewLeader')}
+              </Button>
+            </div>
+          ) : user ? (
+            <LeaderList leaders={currentLeaders} />
+          ) : (
+            <div>
+              <FeaturedLeaders leaders={topRatedLeaders} />
+              <div className="text-center py-8 px-4 rounded-lg bg-secondary border-2 border-dashed border-border mt-4">
+                <h3 className="mt-4 text-xl font-semibold font-headline text-blue-700">{t('leaderList.noLeadersDesc')}</h3>
+                <p className="mt-2 text-muted-foreground max-w-md mx-auto">
+                  Please <a href="/login" className="text-blue-700 underline">login</a> or complete your profile to see relevant leaders in your area.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {totalPages > 1 && !isLoading && (
+        {user && totalPages > 1 && !isLoading && (
           <div className="flex justify-center items-center gap-4 mt-8">
             <Button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

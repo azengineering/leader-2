@@ -79,11 +79,17 @@ export interface SocialBehaviourDistribution {
 
 // --- Public API ---
 
-export async function getLeaders(): Promise<Leader[]> {
-  const { data, error } = await supabase
+export async function getLeaders(limit?: number): Promise<Leader[]> {
+  let query = supabase
     .from('leaders')
     .select('*')
     .eq('status', 'approved');
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching leaders:", error);

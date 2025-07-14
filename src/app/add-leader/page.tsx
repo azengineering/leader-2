@@ -134,33 +134,41 @@ const AddLeaderPageContent = () => {
       if (user && !hasFetchedMatchingLeaders && isAuthorized) { // Only fetch if user exists, not fetched, and authorized
         setIsMatchingLeadersLoading(true);
         const allLeaders = await getLeaders();
-        const { mpConstituency, mlaConstituency, panchayat, state } = user;
-        
+        const { mpConstituency, mlaConstituency, panchayat } = user;
+
         const lowerMp = mpConstituency?.trim().toLowerCase();
         const lowerMla = mlaConstituency?.trim().toLowerCase();
         const lowerPanchayat = panchayat?.trim().toLowerCase();
-        const userState = state?.trim();
 
-        const locationBasedLeaders = allLeaders.filter(leader => {
-          const leaderConstituency = leader.constituency.trim().toLowerCase();
-          const leaderState = leader.location.state?.trim();
+        // 1. Filter the leaders first
+        const filteredLeaders = allLeaders.filter(leader => {
+            const lc = leader.constituency.trim().toLowerCase();
+            if (!lowerMp && !lowerMla && !lowerPanchayat) return false; // No profile data, show no one
 
-          if (userState && leaderState === userState) {
-            return true;
-          }
-          if (leader.electionType === 'national' && lowerMp && leaderConstituency === lowerMp) {
-            return true;
-          }
-          if (leader.electionType === 'state' && lowerMla && leaderConstituency === lowerMla) {
-            return true;
-          }
-          if (leader.electionType === 'panchayat' && lowerPanchayat && leaderConstituency === lowerPanchayat) {
-            return true;
-          }
-          return false;
+            const isMpMatch = lowerMp ? lc.includes(lowerMp) : false;
+            const isMlaMatch = lowerMla ? lc.includes(lowerMla) : false;
+            const isPanchayatMatch = lowerPanchayat ? lc.includes(lowerPanchayat) : false;
+            
+            return isMpMatch || isMlaMatch || isPanchayatMatch;
+        });
+
+        // 2. Sort the filtered list
+        const getSortPriority = (leaderConstituency) => {
+            const lc = leaderConstituency.trim().toLowerCase();
+            if (lowerMp && lc.includes(lowerMp)) return 1;
+            if (lowerMla && lc.includes(lowerMla)) return 2;
+            if (lowerPanchayat && lc.includes(lowerPanchayat)) return 3;
+            return 4; // Fallback
+        };
+
+        const sortedLeaders = [...filteredLeaders].sort((a, b) => {
+            const priorityA = getSortPriority(a.constituency);
+            const priorityB = getSortPriority(b.constituency);
+            return priorityA - priorityB;
         });
         
-        const uniqueLeaders = Array.from(new Set(locationBasedLeaders.map(l => l.id))).map(id => locationBasedLeaders.find(l => l.id === id)!);
+        // 3. Ensure uniqueness and set state
+        const uniqueLeaders = Array.from(new Set(sortedLeaders.map(l => l.id))).map(id => sortedLeaders.find(l => l.id === id)!);
         setMatchingLeaders(uniqueLeaders);
         setIsMatchingLeadersLoading(false);
         setHasFetchedMatchingLeaders(true); // Mark as fetched

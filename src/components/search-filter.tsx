@@ -18,9 +18,27 @@ export default function SearchFilter({ onSearch }: SearchFilterProps) {
   const [electionType, setElectionType] = useState<ElectionType>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [candidateName, setCandidateName] = useState('');
+  const [showConstituencyError, setShowConstituencyError] = useState(false); // State for constituency validation
+  const [showElectionTypeError, setShowElectionTypeError] = useState(false); // New state for election type validation
   const { t } = useLanguage();
 
   const handleSearchClick = () => {
+    // Validation: If Constituency Name is entered, Election Type must be selected
+    if (searchTerm.trim() && !electionType) {
+      setShowElectionTypeError(true);
+      setShowConstituencyError(false); // Clear other error
+      return;
+    }
+
+    // Validation: If Election Type is selected, Constituency Name must be entered
+    if (electionType && !searchTerm.trim()) {
+      setShowConstituencyError(true);
+      setShowElectionTypeError(false); // Clear other error
+      return;
+    }
+
+    setShowConstituencyError(false); // Clear all errors if validation passes
+    setShowElectionTypeError(false);
     onSearch({ electionType, searchTerm, candidateName });
   };
 
@@ -28,6 +46,8 @@ export default function SearchFilter({ onSearch }: SearchFilterProps) {
     setElectionType('');
     setSearchTerm('');
     setCandidateName('');
+    setShowConstituencyError(false); // Reset all errors on clear
+    setShowElectionTypeError(false);
     onSearch({ electionType: '', searchTerm: '', candidateName: '' });
   };
 
@@ -38,60 +58,74 @@ export default function SearchFilter({ onSearch }: SearchFilterProps) {
 
   return (
     <div className="p-6 bg-secondary/50 rounded-lg mb-8 border border-border">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-        <div className="grid gap-2">
-          <Label htmlFor="candidate-name" className="font-semibold">
-            {t('searchFilter.candidateNameLabel')}
-          </Label>
-          <Input
-            id="candidate-name"
-            placeholder={t('searchFilter.candidateNamePlaceholder')}
-            value={candidateName}
-            onChange={(e) => setCandidateName(e.target.value)}
-            className="bg-background"
-          />
-        </div>
+      <form onSubmit={(e) => { e.preventDefault(); handleSearchClick(); }}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid gap-2">
+            <Label htmlFor="candidate-name" className="font-semibold">
+              {t('searchFilter.candidateNameLabel')}
+            </Label>
+            <Input
+              id="candidate-name"
+              placeholder={t('searchFilter.candidateNamePlaceholder')}
+              value={candidateName}
+              onChange={(e) => setCandidateName(e.target.value)}
+              className="bg-background"
+            />
+          </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="election-type" className="font-semibold">
-            {t('searchFilter.electionTypeLabel')}
-          </Label>
-          <Select value={electionType} onValueChange={(value) => setElectionType(value as ElectionType)}>
-            <SelectTrigger id="election-type" className="bg-background">
-              <SelectValue placeholder={t('searchFilter.electionTypePlaceholder')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="national">{t('searchFilter.national')}</SelectItem>
-              <SelectItem value="state">{t('searchFilter.state')}</SelectItem>
-              <SelectItem value="panchayat">{t('searchFilter.panchayat')}</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid gap-2">
+            <Label htmlFor="election-type" className="font-semibold">
+              {t('searchFilter.electionTypeLabel')}
+            </Label>
+            <Select value={electionType} onValueChange={(value) => {
+              setElectionType(value as ElectionType);
+              setShowElectionTypeError(false); // Clear error on change
+            }}>
+              <SelectTrigger id="election-type" className={`bg-background ${showElectionTypeError ? 'border-red-500' : ''}`}>
+                <SelectValue placeholder={t('searchFilter.electionTypePlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="national">{t('searchFilter.national')}</SelectItem>
+                <SelectItem value="state">{t('searchFilter.state')}</SelectItem>
+                <SelectItem value="panchayat">{t('searchFilter.panchayat')}</SelectItem>
+              </SelectContent>
+            </Select>
+            {showElectionTypeError && (
+              <p className="text-red-500 text-xs mt-1">{t('searchFilter.electionTypeRequiredError')}</p>
+            )}
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="search-term" className="font-semibold">
+              {t('searchFilter.constituencyLabel')}
+            </Label>
+            <Input
+              id="search-term"
+              placeholder={getPlaceholder()}
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowConstituencyError(false); // Clear error on input change
+              }}
+              className={`bg-background ${showConstituencyError ? 'border-red-500' : ''}`}
+            />
+            {showConstituencyError && (
+              <p className="text-red-500 text-xs mt-1">{t('searchFilter.constituencyRequiredError')}</p>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+              <Button onClick={handleResetClick} variant="outline" type="button">
+                  <RotateCw className="mr-2 h-4 w-4" />
+                  {t('searchFilter.resetButton')}
+              </Button>
+              <Button type="submit">
+                  <Search className="mr-2 h-4 w-4" />
+                  {t('searchFilter.searchButton')}
+              </Button>
+          </div>
         </div>
-        
-        <div className="grid gap-2">
-           <Label htmlFor="search-term" className="font-semibold">
-            {t('searchFilter.constituencyLabel')}
-          </Label>
-          <Input
-            id="search-term"
-            placeholder={getPlaceholder()}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-background"
-          />
-        </div>
-        
-        <div className="flex gap-2">
-            <Button onClick={handleResetClick} variant="outline">
-                <RotateCw className="mr-2 h-4 w-4" />
-                {t('searchFilter.resetButton')}
-            </Button>
-            <Button onClick={handleSearchClick}>
-                <Search className="mr-2 h-4 w-4" />
-                {t('searchFilter.searchButton')}
-            </Button>
-        </div>
-      </div>
+      </form>
     </div>
   );
 }
