@@ -239,10 +239,10 @@ function RateLeaderContent() {
         <SearchFilter onSearch={handleSearch} />
         
         <div className="mt-12">
-          {user && filteredLeaders.length > 0 && !isLoading && (
+          {(user || manualFilterActive) && filteredLeaders.length > 0 && !isLoading && (
             <>
               <h2 className="text-xl font-bold font-headline mb-4">
-                {t('leaderList.resultsTitle')}
+                {manualFilterActive ? t('leaderList.matchingLeadersTitle') : t('leaderList.resultsTitle')}
               </h2>
               <Separator className="mb-8" />
             </>
@@ -268,17 +268,21 @@ function RateLeaderContent() {
               </Button>
             </div>
           ) : user ? (
-            <LeaderList leaders={currentLeaders} />
-          ) : (
-            <div>
-              <FeaturedLeaders leaders={topRatedLeaders} />
-              <div className="text-center py-8 px-4 rounded-lg bg-secondary border-2 border-dashed border-border mt-4">
-                <h3 className="mt-4 text-xl font-semibold font-headline text-blue-700">{t('leaderList.noLeadersDesc')}</h3>
-                <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-                  Please <a href="/login" className="text-blue-700 underline">login</a> or complete your profile to see relevant leaders in your area.
-                </p>
+            <LeaderList leaders={currentLeaders} initialLeaderIdToHighlight={searchParams.get('leader')} />
+          ) : ( // Non-logged-in user logic
+            manualFilterActive ? ( // If manual filter is active for non-logged-in user
+              <LeaderList leaders={currentLeaders} initialLeaderIdToHighlight={searchParams.get('leader')} /> // Show filtered results
+            ) : ( // If no manual filter is active for non-logged-in user
+              <div>
+                <FeaturedLeaders leaders={topRatedLeaders} />
+                <div className="text-center py-8 px-4 rounded-lg bg-secondary border-2 border-dashed border-border mt-4">
+                  <h3 className="mt-4 text-xl font-semibold font-headline text-blue-700">{t('leaderList.noLeadersDesc')}</h3>
+                  <p className="mt-2 text-muted-foreground max-w-md mx-auto">
+                    Please <a href="/login" className="text-blue-700 underline">login</a> or complete your profile to see relevant leaders in your area.
+                  </p>
+                </div>
               </div>
-            </div>
+            )
           )}
         </div>
 

@@ -94,6 +94,7 @@ const translations = {
       constituencyLabel: 'Constituency Name',
       candidateNameLabel: 'Candidate Name',
       candidateNamePlaceholder: 'Enter candidate name...',
+      orText: 'OR',
       placeholder: {
         national: 'Enter Loksabha name...',
         state: 'Enter Bidhansabha name...',
@@ -108,6 +109,7 @@ const translations = {
       noLeaders: 'No Leaders Found',
       noLeadersDesc: 'Try adjusting your filters to find political leaders.',
       resultsTitle: 'Existing leaders',
+      matchingLeadersTitle: 'Matching Leaders',
       addLeaderPrompt: "Can't find who you're looking for? Add them to our database.",
       noResultsFound: 'No Results Found',
       noResultsFoundDescription: 'Your manual filter returned no leaders. Please try adjusting your search criteria or reset the filters.',
@@ -432,6 +434,7 @@ const translations = {
       constituencyLabel: 'निर्वाचन क्षेत्र का नाम',
       candidateNameLabel: 'उम्मीदवार का नाम',
       candidateNamePlaceholder: 'उम्मीदवार का नाम दर्ज करें...',
+      orText: 'या',
       placeholder: {
         national: 'लोकसभा का नाम दर्ज करें...',
         state: 'विधानसभा का नाम दर्ज करें...',

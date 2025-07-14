@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import { getPollForParticipation, submitPollResponse, type PollForParticipation, type PollAnswer } from '@/data/polls';
 import withAuth from '@/components/with-auth';
 import Header from '@/components/header';
@@ -18,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 function PollParticipationPage() {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const router = useRouter();
     const params = useParams();
     const { toast } = useToast();

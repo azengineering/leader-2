@@ -38,6 +38,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 type PollCardProps = {
     poll: PollListItem & { user_has_voted: boolean; description: string | null; };
     onParticipateClick: (pollId: string) => void;
+    highlightAndSuggestParticipation?: boolean;
 };
 
 const ShareDialog = ({ poll, open, onOpenChange }: { poll: PollListItem, open: boolean, onOpenChange: (open: boolean) => void }) => {
@@ -47,7 +48,7 @@ const ShareDialog = ({ poll, open, onOpenChange }: { poll: PollListItem, open: b
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setShareUrl(`${window.location.origin}/polls?poll=${poll.id}`);
+      setShareUrl(`${window.location.origin}/polls?id=${poll.id}`);
     }
   }, [poll.id]);
 
@@ -105,7 +106,7 @@ const ShareDialog = ({ poll, open, onOpenChange }: { poll: PollListItem, open: b
   );
 };
 
-const PollCard = ({ poll, onParticipateClick }: PollCardProps) => {
+const PollCard = ({ poll, onParticipateClick, highlightAndSuggestParticipation }: PollCardProps) => {
     const [isShareDialogOpen, setShareDialogOpen] = useState(false);
     const { t } = useLanguage(); // Import useLanguage
     return (
@@ -139,7 +140,7 @@ const PollCard = ({ poll, onParticipateClick }: PollCardProps) => {
                     </Button>
                 ) : (
                     <Button 
-                        className="w-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20" 
+                        className={`w-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg shadow-accent/20 ${highlightAndSuggestParticipation ? 'animate-pulse' : ''}`}
                         onClick={() => onParticipateClick(poll.id)}
                     >
                         <Vote className="mr-2"/> {t('pollsPage.participateButton')} {/* Use translation */}
@@ -175,11 +176,11 @@ function PollsPageContent() {
     const searchParams = useSearchParams();
 
     useEffect(() => {
-        const pollIdFromQuery = searchParams.get('poll');
+        const pollIdFromQuery = searchParams.get('id');
         if (pollIdFromQuery && !isLoading) {
             const element = document.getElementById(`poll-${pollIdFromQuery}`);
             if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                element.scrollIntoView({ behavior: 'smooth', 'block': 'center' });
                 element.classList.add('shadow-2xl', 'shadow-primary/50', 'ring-2', 'ring-primary');
                 setTimeout(() => {
                     element.classList.remove('shadow-2xl', 'shadow-primary/50', 'ring-2', 'ring-primary');
@@ -229,7 +230,12 @@ function PollsPageContent() {
                         polls.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {polls.map(poll => (
-                                    <PollCard key={poll.id} poll={poll} onParticipateClick={handleParticipate} />
+                                    <PollCard 
+                                        key={poll.id} 
+                                        poll={poll} 
+                                        onParticipateClick={handleParticipate} 
+                                        highlightAndSuggestParticipation={poll.id === searchParams.get('id')}
+                                    />
                                 ))}
                             </div>
                         ) : (

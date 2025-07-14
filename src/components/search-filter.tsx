@@ -59,8 +59,8 @@ export default function SearchFilter({ onSearch }: SearchFilterProps) {
   return (
     <div className="p-6 bg-secondary/50 rounded-lg mb-8 border border-border">
       <form onSubmit={(e) => { e.preventDefault(); handleSearchClick(); }}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div className="grid gap-2">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="flex-1 min-w-[200px] grid gap-2">
             <Label htmlFor="candidate-name" className="font-semibold">
               {t('searchFilter.candidateNameLabel')}
             </Label>
@@ -73,7 +73,11 @@ export default function SearchFilter({ onSearch }: SearchFilterProps) {
             />
           </div>
 
-          <div className="grid gap-2">
+          <div className="flex items-center justify-center text-muted-foreground font-semibold text-lg mb-2">
+            {t('searchFilter.orText')}
+          </div>
+
+          <div className="flex-1 min-w-[200px] grid gap-2">
             <Label htmlFor="election-type" className="font-semibold">
               {t('searchFilter.electionTypeLabel')}
             </Label>
@@ -95,7 +99,7 @@ export default function SearchFilter({ onSearch }: SearchFilterProps) {
             )}
           </div>
           
-          <div className="grid gap-2">
+          <div className="flex-1 min-w-[200px] grid gap-2">
             <Label htmlFor="search-term" className="font-semibold">
               {t('searchFilter.constituencyLabel')}
             </Label>
@@ -114,7 +118,7 @@ export default function SearchFilter({ onSearch }: SearchFilterProps) {
             )}
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 self-end">
               <Button onClick={handleResetClick} variant="outline" type="button">
                   <RotateCw className="mr-2 h-4 w-4" />
                   {t('searchFilter.resetButton')}

@@ -87,6 +87,7 @@ export default function RatingDialog({ leader, open, onOpenChange, onRatingSucce
       });
       return;
     }
+
     if (!comment || comment.trim().length === 0) {
       toast({
         variant: 'destructive',

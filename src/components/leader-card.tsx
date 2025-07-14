@@ -262,9 +262,10 @@ interface LeaderCardProps {
   onEdit?: () => void;
   variant?: 'default' | 'compact';
   id?: string;
+  highlightAndSuggestRating?: boolean;
 }
 
-export default function LeaderCard({ leader: initialLeader, isEditable = false, onEdit, variant = 'default', id }: LeaderCardProps) {
+export default function LeaderCard({ leader: initialLeader, isEditable = false, onEdit, variant = 'default', id, highlightAndSuggestRating }: LeaderCardProps) {
   const { t } = useLanguage();
   const { user } = useAuth();
   const router = useRouter();
@@ -596,7 +597,14 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
 
         {!isCompact && (
         <CardFooter className="p-2 bg-secondary/50 border-t flex justify-center">
-            <Button size="sm" className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-px" onClick={handleRateClick}>
+            <Button 
+                size="sm" 
+                className={cn(
+                    "transition-all duration-300 hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-px",
+                    highlightAndSuggestRating && "animate-pulse bg-primary text-primary-foreground shadow-lg shadow-primary/50"
+                )} 
+                onClick={handleRateClick}
+            >
                 <Star className="mr-2 h-4 w-4" /> {t('leaderCard.addRatingAndComment')}
             </Button>
         </CardFooter>

@@ -7,9 +7,10 @@ import Link from 'next/link';
 
 interface LeaderListProps {
   leaders: Leader[];
+  initialLeaderIdToHighlight?: string | null;
 }
 
-export default function LeaderList({ leaders }: LeaderListProps) {
+export default function LeaderList({ leaders, initialLeaderIdToHighlight }: LeaderListProps) {
   const { t } = useLanguage();
 
   if (leaders.length === 0) {
@@ -36,7 +37,12 @@ export default function LeaderList({ leaders }: LeaderListProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {leaders.map((leader) => (
-        <LeaderCard key={leader.id} leader={leader} id={`leader-${leader.id}`} />
+        <LeaderCard 
+          key={leader.id} 
+          leader={leader} 
+          id={`leader-${leader.id}`} 
+          highlightAndSuggestRating={leader.id === initialLeaderIdToHighlight}
+        />
       ))}
     </div>
   );
