@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { formatDistanceToNow, format } from 'date-fns';
 import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context'; // Added this import
-import { getActivePollsForUser } from '@/data/polls';
-import type { PollListItem } from '@/data/polls';
+import { getActivePollsForUser, getPollById } from '@/data/polls';
+import type { PollListItem, Poll } from '@/data/polls';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Vote, Check, Clock, Users, Share2, Copy } from 'lucide-react';
@@ -174,6 +175,7 @@ function PollsPageContent() {
     const [showLoginDialog, setShowLoginDialog] = useState(false);
     const [selectedPollId, setSelectedPollId] = useState<string | null>(null);
     const searchParams = useSearchParams();
+    const [specificPollFromQuery, setSpecificPollFromQuery] = useState<(PollListItem & { user_has_voted: boolean; description: string | null; }) | null>(null);
 
     useEffect(() => {
         const pollIdFromQuery = searchParams.get('id');
@@ -191,17 +193,35 @@ function PollsPageContent() {
 
     useEffect(() => {
         const fetchPolls = async () => {
+            setIsLoading(true);
+            const pollIdFromQuery = searchParams.get('id');
+
             if (user) {
-                setIsLoading(true);
                 const pollsData = await getActivePollsForUser(user.id);
                 setPolls(pollsData);
-                setIsLoading(false);
-            } else if (!authLoading) {
-                setIsLoading(false);
+            } else if (pollIdFromQuery) {
+                // If not logged in but a poll ID is in query, fetch that specific poll
+                const specific = await getPollById(pollIdFromQuery);
+                if (specific) {
+                    // Convert Poll to PollListItem format for PollCard
+                    // Note: getPollById does not return response_count or user_has_voted,
+                    // so we default them for display purposes.
+                    setSpecificPollFromQuery({
+                        id: specific.id,
+                        title: specific.title,
+                        description: specific.description,
+                        is_active: specific.is_active,
+                        active_until: specific.active_until,
+                        created_at: specific.created_at,
+                        response_count: 0, // Default, as getPollById doesn't fetch this
+                        user_has_voted: false, // Default for non-logged-in user
+                    });
+                }
             }
+            setIsLoading(false);
         };
         fetchPolls();
-    }, [user, authLoading]);
+    }, [user, authLoading, searchParams]);
     
     const handleParticipate = (pollId: string) => {
         if (!user) {
@@ -245,15 +265,40 @@ function PollsPageContent() {
                                 <p className="mt-2 text-muted-foreground">{t('pollsPage.noPollsDescription')}</p>
                             </div>
                         )
-                    ) : (
-                        <div className="text-center py-24 px-4 rounded-lg bg-background border-2 border-dashed">
-                            <Vote className="w-16 h-16 mx-auto text-muted-foreground" />
-                            <h2 className="mt-6 text-2xl font-semibold">{t('pollsPage.loginRequiredTitle')}</h2>
-                            <p className="mt-2 text-muted-foreground">{t('pollsPage.loginRequiredDescription')}</p>
-                            <Button onClick={() => router.push('/login?redirect=/polls')} className="mt-6">
-                                {t('pollsPage.login')}
-                            </Button>
-                        </div>
+                    ) : ( // Non-logged-in user logic
+                        specificPollFromQuery ? (
+                            <div className="mb-8">
+                                <h2 className="text-xl font-bold font-headline mb-4">
+                                    {t('pollsPage.sharedPollTitle')}
+                                </h2>
+                                <Separator className="mb-8" />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                                    <PollCard 
+                                        poll={specificPollFromQuery} 
+                                        onParticipateClick={handleParticipate} 
+                                        highlightAndSuggestParticipation={true} 
+                                    />
+                                </div>
+                                <Separator className="mb-8" />
+                                <div className="text-center py-8 px-4 rounded-lg bg-background border-2 border-dashed">
+                                    <Vote className="w-16 h-16 mx-auto text-muted-foreground" />
+                                    <h2 className="mt-6 text-2xl font-semibold">{t('pollsPage.loginRequiredTitle')}</h2>
+                                    <p className="mt-2 text-muted-foreground">{t('pollsPage.loginRequiredDescription')}</p>
+                                    <Button onClick={() => router.push('/login?redirect=/polls')} className="mt-6">
+                                        {t('pollsPage.login')}
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-24 px-4 rounded-lg bg-background border-2 border-dashed">
+                                <Vote className="w-16 h-16 mx-auto text-muted-foreground" />
+                                <h2 className="mt-6 text-2xl font-semibold">{t('pollsPage.loginRequiredTitle')}</h2>
+                                <p className="mt-2 text-muted-foreground">{t('pollsPage.loginRequiredDescription')}</p>
+                                <Button onClick={() => router.push('/login?redirect=/polls')} className="mt-6">
+                                    {t('pollsPage.login')}
+                                </Button>
+                            </div>
+                        )
                     )}
                 </main>
                 <Footer />

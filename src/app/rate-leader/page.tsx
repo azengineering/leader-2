@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import LeaderList from '@/components/leader-list';
-import { getLeaders, type Leader } from '@/data/leaders';
+import LeaderCard from '@/components/leader-card';
+import { getLeaders, getLeaderById, type Leader } from '@/data/leaders';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/context/language-context';
 import SearchFilter from '@/components/search-filter';
@@ -43,8 +44,9 @@ function RateLeaderContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const leadersPerPage = 10;
-  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false); // New state to track initial load
-  const [manualFilterActive, setManualFilterActive] = useState(false); // New state to track manual filter
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
+  const [manualFilterActive, setManualFilterActive] = useState(false);
+  const [specificLeaderFromQuery, setSpecificLeaderFromQuery] = useState<Leader | null>(null);
   
   const { user } = useAuth();
   const router = useRouter();
@@ -129,9 +131,9 @@ function RateLeaderContent() {
       setFilteredLeaders(sortedByElection);
       setCurrentPage(1);
     }
-  }, [user, searchParams, hasLoadedInitialData, manualFilterActive]); // Removed allLeaders from dependencies
+  }, [user, searchParams, hasLoadedInitialData, manualFilterActive, allLeaders]);
 
-  // New useEffect for initial data fetching
+  // New useEffect for initial data fetching and specific leader handling
   useEffect(() => {
     if (!hasLoadedInitialData) {
       const fetchInitialLeaders = async () => {
@@ -142,12 +144,19 @@ function RateLeaderContent() {
         const topLeaders = await getLeaders(20);
         const sortedTopLeaders = [...topLeaders].sort((a, b) => b.rating - a.rating);
         setTopRatedLeaders(sortedTopLeaders);
+
+        const leaderIdFromQuery = searchParams.get('leader');
+        if (leaderIdFromQuery) {
+          const specific = await getLeaderById(leaderIdFromQuery);
+          setSpecificLeaderFromQuery(specific);
+        }
+
         setIsLoading(false);
         setHasLoadedInitialData(true); // Mark data as loaded
       };
       fetchInitialLeaders();
     }
-  }, [hasLoadedInitialData]); // Only run once on mount
+  }, [hasLoadedInitialData, searchParams]);
 
   const handleAddLeaderClick = () => {
     if (user) {
@@ -267,22 +276,30 @@ function RateLeaderContent() {
                 {t('hero.addNewLeader')}
               </Button>
             </div>
-          ) : user ? (
+          ) : user || manualFilterActive ? (
             <LeaderList leaders={currentLeaders} initialLeaderIdToHighlight={searchParams.get('leader')} />
-          ) : ( // Non-logged-in user logic
-            manualFilterActive ? ( // If manual filter is active for non-logged-in user
-              <LeaderList leaders={currentLeaders} initialLeaderIdToHighlight={searchParams.get('leader')} /> // Show filtered results
-            ) : ( // If no manual filter is active for non-logged-in user
-              <div>
-                <FeaturedLeaders leaders={topRatedLeaders} />
-                <div className="text-center py-8 px-4 rounded-lg bg-secondary border-2 border-dashed border-border mt-4">
-                  <h3 className="mt-4 text-xl font-semibold font-headline text-blue-700">{t('leaderList.noLeadersDesc')}</h3>
-                  <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-                    Please <a href="/login" className="text-blue-700 underline">login</a> or complete your profile to see relevant leaders in your area.
-                  </p>
-                </div>
+          ) : ( // Non-logged-in user, no manual filter
+            <div>
+              {specificLeaderFromQuery && (
+                <>
+                  <h2 className="text-xl font-bold font-headline mb-4">
+                    {t('leaderList.sharedLeaderTitle')}
+                  </h2>
+                  <Separator className="mb-8" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                    <LeaderCard leader={specificLeaderFromQuery} id={`leader-${specificLeaderFromQuery.id}`} highlightAndSuggestRating={true} />
+                  </div>
+                  <Separator className="mb-8" />
+                </>
+              )}
+              <FeaturedLeaders leaders={topRatedLeaders} />
+              <div className="text-center py-8 px-4 rounded-lg bg-secondary border-2 border-dashed border-border mt-4">
+                <h3 className="mt-4 text-xl font-semibold font-headline text-blue-700">{t('leaderList.noLeadersDesc')}</h3>
+                <p className="mt-2 text-muted-foreground max-w-md mx-auto">
+                  Please <a href="/login" className="text-blue-700 underline">login</a> or complete your profile to see relevant leaders in your area.
+                </p>
               </div>
-            )
+            </div>
           )}
         </div>
 
