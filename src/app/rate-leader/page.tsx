@@ -88,15 +88,9 @@ function RateLeaderContent() {
         const lowerMp = mpConstituency?.trim().toLowerCase();
         const lowerMla = mlaConstituency?.trim().toLowerCase();
         const lowerPanchayat = panchayat?.trim().toLowerCase();
-        const userState = state?.trim();
 
         const locationBasedLeaders = allLeaders.filter(leader => {
           const leaderConstituency = leader.constituency.trim().toLowerCase();
-          const leaderState = leader.location.state?.trim();
-
-          if (userState && leaderState === userState) {
-            return true;
-          }
 
           if (leader.electionType === 'national' && lowerMp && leaderConstituency === lowerMp) {
             return true;

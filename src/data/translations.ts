@@ -108,7 +108,7 @@ const translations = {
     leaderList: {
       noLeaders: 'No Leaders Found',
       noLeadersDesc: 'Try adjusting your filters to find political leaders.',
-      resultsTitle: 'Existing leaders',
+      resultsTitle: 'Existing leaders in your area',
       matchingLeadersTitle: 'Matching Leaders',
       addLeaderPrompt: "Can't find who you're looking for? Add them to our database.",
       noResultsFound: 'No Results Found',

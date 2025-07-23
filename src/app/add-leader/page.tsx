@@ -140,20 +140,19 @@ const AddLeaderPageContent = () => {
         const lowerMla = mlaConstituency?.trim().toLowerCase();
         const lowerPanchayat = panchayat?.trim().toLowerCase();
 
-        // 1. Filter the leaders first
-        const filteredLeaders = allLeaders.filter(leader => {
-            const lc = leader.constituency.trim().toLowerCase();
-            if (!lowerMp && !lowerMla && !lowerPanchayat) return false; // No profile data, show no one
+        const userConstituencies = [lowerMp, lowerMla, lowerPanchayat].filter(Boolean);
 
-            const isMpMatch = lowerMp ? lc.includes(lowerMp) : false;
-            const isMlaMatch = lowerMla ? lc.includes(lowerMla) : false;
-            const isPanchayatMatch = lowerPanchayat ? lc.includes(lowerPanchayat) : false;
-            
-            return isMpMatch || isMlaMatch || isPanchayatMatch;
-        });
+        // 1. Filter the leaders first
+        const filteredLeaders = userConstituencies.length > 0
+            ? allLeaders.filter(leader => {
+                const leaderConstituency = leader.constituency.trim().toLowerCase();
+                // Return true if the leader's constituency includes ANY of the user's constituencies
+                return userConstituencies.some(userConst => leaderConstituency.includes(userConst!));
+            })
+            : [];
 
         // 2. Sort the filtered list
-        const getSortPriority = (leaderConstituency) => {
+        const getSortPriority = (leaderConstituency: string) => {
             const lc = leaderConstituency.trim().toLowerCase();
             if (lowerMp && lc.includes(lowerMp)) return 1;
             if (lowerMla && lc.includes(lowerMla)) return 2;

@@ -18,10 +18,10 @@ export default function FeaturedLeaders({ leaders }: FeaturedLeadersProps) {
   if (!leaders.length) return null;
 
   return (
-    <section className="mt-[-2rem] pb-4 md:pb-6 bg-secondary/50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="mt-[-2rem] py-8 md:py-12 bg-secondary/50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="mb-8">
-          <h2 className="font-headline text-xl md:text-2xl font-extrabold">{t('featuredLeaders.heading')}</h2>
+          <h2 className="font-headline text-2xl md:text-3xl font-extrabold">{t('featuredLeaders.heading')}</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             {t('featuredLeaders.subheading')}
           </p>
@@ -39,8 +39,8 @@ export default function FeaturedLeaders({ leaders }: FeaturedLeadersProps) {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
         </Carousel>
       </div>
     </section>
