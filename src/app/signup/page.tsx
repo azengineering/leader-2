@@ -136,9 +136,6 @@ export default function SignupPage() {
           </Button>
           
           <CardHeader className="text-center p-8">
-            <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
-              <UserPlus className="w-10 h-10 text-primary" />
-            </div>
             <CardTitle className="text-3xl font-headline">{t('signupPage.title')}</CardTitle>
             <CardDescription className="pt-1">{t('signupPage.description')}</CardDescription>
           </CardHeader>

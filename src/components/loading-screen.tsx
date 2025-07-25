@@ -21,14 +21,14 @@ const LoadingScreen = () => {
       if (progress >= 100) {
         clearInterval(interval);
       }
-    }, 250);
+    }, 200);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const quoteInterval = setInterval(() => {
         setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % quotes.length);
-    }, 2500);
+    }, 2000);
 
     return () => clearInterval(quoteInterval);
   }, []);
@@ -106,7 +106,7 @@ const LoadingScreen = () => {
           100% { transform: translateY(0px) translateX(0px); opacity: 0.1; }
         }
         .animate-float {
-          animation: float 6s ease-in-out infinite;
+          animation: float 4s ease-in-out infinite;
         }
 
         @keyframes quote-cycle {
@@ -114,7 +114,7 @@ const LoadingScreen = () => {
           20%, 80% { opacity: 1; transform: translateY(0); }
         }
         .animate-quote-cycle {
-          animation: quote-cycle 2.5s ease-in-out infinite;
+          animation: quote-cycle 2s ease-in-out infinite;
         }
       `}</style>
     </div>

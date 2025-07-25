@@ -8,7 +8,7 @@ import ClientLayoutComponents from '@/components/client-layout-components';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PolitiRate',
+  title: 'PolitiRate (Janmat-Voice)',
   description: 'Rate and review political leaders.',
 };
 

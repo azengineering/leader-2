@@ -8,6 +8,8 @@ import Hero from '@/components/hero';
 import HowItWorks from '@/components/how-it-works';
 import WhyItMatters from '@/components/why-it-matters';
 import FeaturedLeaders from '@/components/featured-leaders';
+import CallToAction from '@/components/call-to-action';
+import CommunityImpactShowcase from '@/components/community-impact-showcase';
 import { getLeaders, type Leader } from '@/data/leaders';
 
 const LoadingScreen = dynamic(() => import('@/components/loading-screen'), { ssr: false });
@@ -31,7 +33,7 @@ export default function Home() {
       sessionStorage.setItem('hasVisitedPolitiRate', 'true');
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 3000);
+      }, 4000);
 
       return () => clearTimeout(timer);
     }
@@ -49,6 +51,8 @@ export default function Home() {
         <HowItWorks />
         <FeaturedLeaders leaders={topRatedLeaders} />
         <WhyItMatters />
+        <CallToAction />
+        <CommunityImpactShowcase />
       </main>
       <Footer />
     </div>

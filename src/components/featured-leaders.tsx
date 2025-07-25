@@ -29,7 +29,9 @@ export default function FeaturedLeaders({ leaders }: FeaturedLeadersProps) {
         <Carousel
           opts={{
             align: "start",
+            loop: true,
           }}
+          autoplay
           className="w-full"
         >
           <CarouselContent className="-ml-4">

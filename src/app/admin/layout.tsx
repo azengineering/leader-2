@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { UserCheck, LogOut, LayoutDashboard, Scale, Users, Menu, Wrench, Bell, User, Clock } from 'lucide-react';
+import { UserCheck, LogOut, LayoutDashboard, Users, Menu, Wrench, Bell, User, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from '@/components/ui/sheet';
@@ -176,7 +176,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Header */}
             <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
               <Link href="/" className="flex items-center gap-2 font-semibold">
-                <Scale className="h-6 w-6 text-primary" />
                 <span>PolitiRate Admin</span>
               </Link>
             </div>
@@ -213,7 +212,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 {/* Mobile Header */}
                 <div className="flex items-center gap-2 font-semibold mb-4">
-                  <Scale className="h-6 w-6 text-primary" />
                   <span>PolitiRate Admin</span>
                 </div>
 

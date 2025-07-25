@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Scale, X, Ban, Mail, Loader2 } from 'lucide-react';
+import { X, Ban, Mail, Loader2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -213,9 +213,6 @@ function LoginContent() {
             </Button>
             
             <CardHeader className="text-center p-8">
-              <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4">
-                <Scale className="w-10 h-10 text-primary" />
-              </div>
               <CardTitle className="text-3xl font-headline">{t('loginPage.title')}</CardTitle>
               <CardDescription className="pt-1">{t('loginPage.description')}</CardDescription>
             </CardHeader>

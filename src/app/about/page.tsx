@@ -4,7 +4,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { useLanguage } from '@/context/language-context';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Lightbulb, Users, Handshake, Scale, Megaphone } from 'lucide-react'; // Added icons
+import { Lightbulb, Users, Handshake, Megaphone } from 'lucide-react'; // Added icons
 
 export default function AboutPage() {
   const { t } = useLanguage();
@@ -57,7 +57,6 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="p-6 rounded-lg shadow-sm"> {/* Adjusted shadow */}
               <CardHeader className="pb-4">
-                <Scale className="w-8 h-8 text-muted-foreground mx-auto mb-3" /> {/* Smaller, muted icon */}
                 <CardTitle className="text-xl font-semibold text-foreground text-center">{t('aboutPage.step1Title')}</CardTitle> {/* Changed text color */}
               </CardHeader>
               <CardContent>
