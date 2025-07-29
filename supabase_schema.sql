@@ -1,6 +1,6 @@
 -- The polls table is updated to include target_filters, and the get_active_polls_for_user function is modified to respect these filters.
 -- =============================================
--- POLITIRATE PLATFORM - COMPLETE SUPABASE SCHEMA
+-- POLITICSRATE PLATFORM - COMPLETE SUPABASE SCHEMA
 -- =============================================
 
 -- Enable required extensions
@@ -179,7 +179,7 @@ CREATE TABLE public.site_settings (
     contact_youtube text,
     contact_facebook text,
     contact_instagram text,
-    site_title text DEFAULT 'Politirate',
+    site_title text DEFAULT 'PoliticsRate',
     site_description text DEFAULT 'Rate and review political leaders',
     privacy_policy_url text,
     terms_of_service_url text,
@@ -1223,7 +1223,7 @@ CREATE POLICY "Users can view their own audit logs" ON public.audit_logs
 
 -- Function to initialize default admin (call after creating user through Supabase Auth)
 CREATE OR REPLACE FUNCTION public.initialize_default_admin(
-    p_admin_email text DEFAULT 'admin@politirate.com'
+    p_admin_email text DEFAULT 'admin@politicsrate.com'
 )
 RETURNS text AS $$
 DECLARE
@@ -1308,9 +1308,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Insert sample site settings
 UPDATE public.site_settings SET
-    site_title = 'Politirate',
+    site_title = 'PoliticsRate',
     site_description = 'Rate and review political leaders in your constituency',
-    contact_email = 'support@politirate.com',
+    contact_email = 'support@politicsrate.com',
     enable_user_registration = true,
     enable_public_polls = true,
     max_ratings_per_user = 100
@@ -1319,7 +1319,7 @@ WHERE id = 1;
 -- Insert sample notification
 INSERT INTO public.notifications (title, message, "isActive", notification_type, show_banner)
 VALUES (
-    'Welcome to Politirate!',
+    'Welcome to PoliticsRate!',
     'Start rating and reviewing political leaders in your area. Your voice matters!',
     true,
     'announcement',

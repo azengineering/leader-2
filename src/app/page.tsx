@@ -27,10 +27,10 @@ export default function Home() {
 
     fetchLeaders();
     
-    if (sessionStorage.getItem('hasVisitedPolitiRate')) {
+    if (sessionStorage.getItem('hasVisitedPoliticsRate')) {
       setIsLoading(false);
     } else {
-      sessionStorage.setItem('hasVisitedPolitiRate', 'true');
+      sessionStorage.setItem('hasVisitedPoliticsRate', 'true');
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 4000);
@@ -45,6 +45,17 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Home",
+            "url": "https://www.janmat-voice.com"
+          })
+        }}
+      />
       <Header />
       <main className="flex-grow">
         <Hero />

@@ -320,6 +320,24 @@ export default function LeaderCard({ leader: initialLeader, isEditable = false, 
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": leader.name,
+            "jobTitle": "Political Leader",
+            "image": leader.photoUrl,
+            "url": `https://www.janmat-voice.com/rate-leader?leader=${leader.id}`,
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": leader.rating.toFixed(1),
+              "reviewCount": leader.reviewCount
+            }
+          })
+        }}
+      />
       <Card id={id} className="flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg rounded-xl border">
         <CardContent className={cn("p-4 flex-grow flex flex-col", isCompact && "p-3")}>
           <div className="flex gap-4 items-start mb-4">

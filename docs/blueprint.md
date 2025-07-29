@@ -1,4 +1,4 @@
-# **App Name**: PolitiRate
+# **App Name**: PoliticsRate
 
 ## Core Features:
 

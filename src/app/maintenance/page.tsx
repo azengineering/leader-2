@@ -22,7 +22,7 @@ export default async function MaintenancePage() {
             </main>
             <footer className="w-full py-4 text-center text-muted-foreground text-sm">
                 <p>
-                  © {new Date().getFullYear()} PolitiRate. All rights reserved.
+                  © {new Date().getFullYear()} PoliticsRate. All rights reserved.
                   <Link href="/admin/login" className="ml-2 text-primary hover:underline" aria-label="Admin Panel">...</Link>
                 </p>
             </footer>

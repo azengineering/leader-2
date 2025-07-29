@@ -52,7 +52,7 @@ const LoadingScreen = () => {
 
       <div className="relative z-10 text-center animate-fadeInUp max-w-2xl">
         <h1 className="text-6xl md:text-7xl font-extrabold mb-6 text-primary font-headline tracking-tight leading-tight drop-shadow-sm">
-          PolitiRate
+          PoliticsRate
         </h1>
         <p className="text-xl md:text-2xl mb-12 font-light text-muted-foreground leading-relaxed px-4">
           Connecting citizens with their elected representatives for a transparent and accountable democracy.

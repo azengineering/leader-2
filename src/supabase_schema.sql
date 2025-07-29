@@ -119,7 +119,7 @@ CREATE TABLE public.site_settings (
 INSERT INTO public.site_settings (key, value) VALUES
 ('maintenance_active', 'false'),
 ('maintenance_message', 'Site is under maintenance. Please check back later.'),
-('contact_email', 'admin@politirate.com'),
+('contact_email', 'admin@politicsrate.com'),
 ('contact_phone', ''),
 ('contact_twitter', ''),
 ('contact_linkedin', ''),

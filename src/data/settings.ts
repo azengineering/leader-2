@@ -40,7 +40,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       // Return default settings if none exist
       return {
         id: 1,
-        site_title: 'PolitiRate',
+        site_title: 'PoliticsRate',
         site_description: 'Rate and review political leaders',
         maintenance_active: false,
         maintenance_start: '',
@@ -55,7 +55,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         enable_user_registration: true,
         enable_public_polls: true,
         max_ratings_per_user: 100,
-        updated_at: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
     }
 
@@ -113,7 +113,7 @@ export async function initializeSiteSettings(): Promise<void> {
 
     if (!existing) {
       await updateSiteSettings({
-        site_title: 'PolitiRate',
+        site_title: 'PoliticsRate',
         site_description: 'Rate and review political leaders in your constituency',
         maintenance_active: false,
         maintenance_message: 'The site is currently down for maintenance. Please check back later.',
@@ -121,7 +121,6 @@ export async function initializeSiteSettings(): Promise<void> {
         enable_user_registration: true,
         enable_public_polls: true,
         max_ratings_per_user: 100,
-        updated_at: new Date().toISOString(),
       });
     }
   } catch (error) {

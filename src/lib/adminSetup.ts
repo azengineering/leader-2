@@ -114,7 +114,7 @@ export async function createAdminUser(
  * Initialize the default admin user for the platform
  */
 export async function initializeDefaultAdmin(): Promise<AdminCreationResult> {
-  const defaultEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@politirate.com';
+  const defaultEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@politicsrate.com';
   const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'SecureAdmin123!';
   const defaultName = process.env.DEFAULT_ADMIN_NAME || 'System Administrator';
 

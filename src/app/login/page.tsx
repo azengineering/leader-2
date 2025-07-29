@@ -185,7 +185,7 @@ function LoginContent() {
               Acknowledge
             </Button>
             <AlertDialogAction asChild>
-              <a href="mailto:support@politirate.com" className="flex items-center gap-2">
+              <a href="mailto:support@politicsrate.com" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" /> Contact Support
               </a>
             </AlertDialogAction>

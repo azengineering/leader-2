@@ -127,7 +127,7 @@ export default function Header() {
           <div className="flex items-center justify-between border-b p-4">
                <SheetClose asChild>
                    <Link href="/" className="flex items-center gap-2">
-                      <span className="text-xl font-bold font-headline text-primary">PolitiRate <span className="text-lg text-muted-foreground">(Janmat-Voice)</span></span>
+                      <span className="text-xl font-bold font-headline text-primary">PoliticsRate <span className="text-lg text-muted-foreground">(Janmat-Voice)</span></span>
                   </Link>
                </SheetClose>
               <SheetTitle className="sr-only">Menu</SheetTitle>
@@ -220,7 +220,7 @@ export default function Header() {
         <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex flex-1 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-xl font-bold font-headline text-primary">PolitiRate <span className="text-lg text-muted-foreground">(Janmat-Voice)</span></span>
+              <span className="text-xl font-bold font-headline text-primary">PoliticsRate <span className="text-lg text-muted-foreground">(Janmat-Voice)</span></span>
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
               {navLinks.map(link => (

@@ -176,7 +176,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Header */}
             <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
               <Link href="/" className="flex items-center gap-2 font-semibold">
-                <span>PolitiRate Admin</span>
+                <span>PoliticsRate Admin</span>
               </Link>
             </div>
 
@@ -212,7 +212,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                 {/* Mobile Header */}
                 <div className="flex items-center gap-2 font-semibold mb-4">
-                  <span>PolitiRate Admin</span>
+                  <span>PoliticsRate Admin</span>
                 </div>
 
                 {/* Mobile Navigation */}

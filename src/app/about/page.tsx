@@ -10,6 +10,18 @@ export default function AboutPage() {
   const { t } = useLanguage();
   return (
     <div className="flex flex-col min-h-screen bg-background"> {/* Changed background */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            "name": "About Janmat-Voice (PoliticsRate)",
+            "url": "https://www.janmat-voice.com/about",
+            "description": "Learn about our mission to empower informed citizenship by providing a platform to rate and review political leaders."
+          })
+        }}
+      />
       <Header />
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="mb-12">
