@@ -11,12 +11,14 @@ import FeaturedLeaders from '@/components/featured-leaders';
 import CallToAction from '@/components/call-to-action';
 import CommunityImpactShowcase from '@/components/community-impact-showcase';
 import { getLeaders, type Leader } from '@/data/leaders';
+import { useWelcomePageLoading } from '@/context/welcome-page-loading-context';
 
 const LoadingScreen = dynamic(() => import('@/components/loading-screen'), { ssr: false });
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [topRatedLeaders, setTopRatedLeaders] = useState<Leader[]>([]);
+  const { setWelcomePageLoading } = useWelcomePageLoading();
 
   useEffect(() => {
     const fetchLeaders = async () => {
@@ -33,11 +35,15 @@ export default function Home() {
       sessionStorage.setItem('hasVisitedPoliticsRate', 'true');
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 4000);
+      }, 4000); // Revert to original timeout, banner will be controlled by context
 
       return () => clearTimeout(timer);
     }
   }, []);
+
+  useEffect(() => {
+    setWelcomePageLoading(isLoading);
+  }, [isLoading, setWelcomePageLoading]);
 
   if (isLoading) {
     return <LoadingScreen />;

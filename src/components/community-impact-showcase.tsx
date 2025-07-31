@@ -85,7 +85,7 @@ export default function CommunityImpactShowcase() {
         >
           <CarouselContent className="-ml-8 pb-4"> {/* Adjusted margin and padding */}
             {dummyTestimonials.map((testimonial, index) => (
-              <CarouselItem key={testimonial.id} className="pl-8 md:basis-1/2 lg:basis-1/3"> {/* Display multiple cards */}
+              <CarouselItem key={testimonial.id} className="pl-8 md:basis-1/3 lg:basis-1/3"> {/* Display multiple cards */}
                 <div className="p-1">
                   <Card className="shadow-lg border border-primary/20 rounded-lg overflow-hidden h-full flex flex-col justify-between"
                     style={{ backgroundColor: testimonialColors[index % testimonialColors.length] }}> {/* Apply alternate colors */}

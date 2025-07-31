@@ -4,7 +4,7 @@ import { supabase } from '@/lib/db';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export type TicketStatus = 'open' | 'in-progress' | 'resolved' | 'closed';
-export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
 
 export interface SupportTicket {
   id: string;
@@ -25,7 +25,7 @@ export interface CreateTicketData {
   user_email: string;
   subject: string;
   message: string;
-  priority?: TicketPriority;
+  priority?: string; // Change to string to allow for validation
 }
 
 export interface SupportTicketStats {
@@ -150,6 +150,12 @@ export async function createSupportTicket(ticketData: CreateTicketData): Promise
       throw new Error('Invalid email format');
     }
 
+    // Validate and sanitize priority
+    const validPriorities: TicketPriority[] = ['low', 'normal', 'high', 'urgent'];
+    const validatedPriority: TicketPriority = validPriorities.includes(ticketData.priority as TicketPriority)
+      ? (ticketData.priority as TicketPriority)
+      : 'normal'; // Default to 'normal' if invalid or not provided
+
     const { data, error } = await supabaseAdmin
       .from('support_tickets')
       .insert({
@@ -157,7 +163,7 @@ export async function createSupportTicket(ticketData: CreateTicketData): Promise
         user_email: ticketData.user_email.trim().toLowerCase(),
         subject: ticketData.subject.trim(),
         message: ticketData.message.trim(),
-        priority: ticketData.priority || 'medium',
+        priority: validatedPriority,
         status: 'open',
       })
       .select()

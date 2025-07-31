@@ -9,6 +9,7 @@ import { Button } from './ui/button';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
+import { useWelcomePageLoading } from '@/context/welcome-page-loading-context';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +28,7 @@ export default function NotificationBanner() {
     const pathname = usePathname();
     const router = useRouter();
     const { user, loading } = useAuth(); // Destructure loading from useAuth
+    const { isWelcomePageLoading } = useWelcomePageLoading();
     const [showLoginDialog, setShowLoginDialog] = useState(false);
     const [pollRedirectUrl, setPollRedirectUrl] = useState<string | null>(null);
 
@@ -76,6 +78,11 @@ export default function NotificationBanner() {
             setShowLoginDialog(true);
         }
     };
+
+    // Hide banner if welcome page is loading, or if not visible/no notifications
+    if (isWelcomePageLoading && pathname === '/') {
+        return null;
+    }
 
     if (!isVisible || notifications.length === 0) {
         return null;
